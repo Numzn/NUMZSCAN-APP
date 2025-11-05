@@ -1,0 +1,44 @@
+# OS Files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+npm-debug.log*
+
+# Temporary files
+*.tmp
+*.temp
+
+# Environment files
+.env
+.env.local
+
+# Build files (if any)
+dist/
+build/
+
+# Optional: Keep server files if you want
+# Uncomment if you don't want to track server files
+# server.py
+# *.pyc
+# __pycache__/
+
+# Optional: Keep certificate files private
+# Uncomment if you have SSL certificates
+# *.crt
+# *.key
+# *.pem
+# *.pfx
+
+# Keep all project files (no exclusions needed for this simple project)
+# All HTML, CSS, JS, and asset files should be tracked
+
