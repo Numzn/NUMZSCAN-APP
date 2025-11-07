@@ -264,31 +264,91 @@ function renderGrid() {
     return;
   }
   
+  let failedTickets = 0;
+
   tickets.forEach(t => {
     const item = document.createElement("div");
     item.className = "item";
     item.innerHTML = `<div id="qr-${t.id}"></div><div style="margin-top:6px">${t.id}</div>`;
     qrcodesEl.appendChild(item);
+    const qrElement = document.getElementById("qr-" + t.id);
+    if (!qrElement) {
+      console.error("QR element not found:", "qr-" + t.id);
+      return;
+    }
+
+    let failureRecorded = false;
+    const markFailure = (message = "QR unavailable") => {
+      if (!qrElement) return;
+      const parentItem = qrElement.closest(".item");
+      if (!failureRecorded) {
+        failedTickets++;
+        failureRecorded = true;
+      }
+      qrElement.innerHTML = `<span class="qr-error">${message}</span>`;
+      if (parentItem) parentItem.classList.add("qr-error-state");
+    };
+
+    const clearFailureState = () => {
+      if (!qrElement) return;
+      const parentItem = qrElement.closest(".item");
+      if (parentItem) parentItem.classList.remove("qr-error-state");
+    };
+
     // Generate QR into element (use QRCode.js)
     try {
-      const qrElement = document.getElementById("qr-" + t.id);
-      if (!qrElement) {
-        console.error("QR element not found:", "qr-" + t.id);
-        return;
-      }
       if (typeof QRCode === 'undefined') {
         console.error("QRCode is undefined when trying to create QR");
-        qrElement.innerHTML = "<small>QR lib missing</small>";
+        markFailure("QR library missing");
         return;
       }
       new QRCode(qrElement, { text: t.id, width: 100, height: 100, margin: 1 });
     } catch (e) {
-      // library may not be loaded
       console.error("QRCode creation failed:", e);
-      const placeholder = document.getElementById("qr-" + t.id);
-      if (placeholder) placeholder.innerHTML = "<small>QR error: " + e.message + "</small>";
+      markFailure("QR error: " + e.message);
     }
+
+    // Verify QR rendered correctly; retry a few times before marking as failed
+    const maxChecks = 3;
+    let attempts = 0;
+    const verifyRendered = () => {
+      if (failureRecorded) return;
+      attempts++;
+      const hasVisual = qrElement.querySelector("canvas, img, svg");
+      if (hasVisual) {
+        clearFailureState();
+        return;
+      }
+      if (attempts < maxChecks) {
+        setTimeout(verifyRendered, 150);
+      } else {
+        markFailure("QR failed to render. Refresh to retry.");
+      }
+    };
+
+    requestAnimationFrame(() => {
+      setTimeout(verifyRendered, 100);
+    });
   });
+
+  setTimeout(() => {
+    const existingBanner = document.getElementById("qrStatusBanner");
+    if (existingBanner) existingBanner.remove();
+    if (failedTickets > 0) {
+      const banner = document.createElement("div");
+      banner.id = "qrStatusBanner";
+      banner.className = "qr-status-banner";
+      const message = failedTickets === 1
+        ? "1 QR code failed to render. Refresh the page or export JSON to keep a backup."
+        : `${failedTickets} QR codes failed to render. Refresh the page or export JSON to keep a backup.`;
+      banner.textContent = `⚠️ ${message}`;
+      if (qrcodesEl.firstChild) {
+        qrcodesEl.prepend(banner);
+      } else {
+        qrcodesEl.appendChild(banner);
+      }
+    }
+  }, 400);
 }
 
 // ---------- Dashboard ----------
@@ -831,15 +891,38 @@ stopScannerBtn.addEventListener("click", async () => {
   await html5QrScanner.stop();
   html5QrScanner.clear();
   html5QrScanner = null;
+  clearTimeout(scanCooldownTimer);
+  clearTimeout(feedbackHideTimer);
+  scanCooldownTimer = null;
+  feedbackHideTimer = null;
+  scanProcessing = false;
+  lastScannedCode = null;
+  lastScanTime = 0;
   startScannerBtn.disabled = false;
   stopScannerBtn.disabled = true;
   readerEl.innerHTML = "";
+  scanFeedbackEl.classList.add("hidden");
+  if (feedbackTapHandler) {
+    scanFeedbackEl.removeEventListener("click", feedbackTapHandler);
+    feedbackTapHandler = null;
+  }
 });
 
 // Handle scanned code with optimized debounce
 let lastScannedCode = null;
 let lastScanTime = 0;
 let scanProcessing = false; // Prevent concurrent processing
+let scanCooldownTimer = null;
+let feedbackHideTimer = null;
+let feedbackTapHandler = null;
+
+function scheduleScanCooldown(duration) {
+  clearTimeout(scanCooldownTimer);
+  scanCooldownTimer = setTimeout(() => {
+    scanProcessing = false;
+    scanCooldownTimer = null;
+  }, duration);
+}
 
 function handleScannedCode(code) {
   const now = Date.now();
@@ -864,13 +947,13 @@ function handleScannedCode(code) {
   
   if (!existing) {
     showScanFeedback("error", "Unknown Ticket", code, "This ticket is not in the system.");
-    scanProcessing = false;
+    scheduleScanCooldown(1500);
     return;
   }
   
   if (existing.used) {
     showScanFeedback("warning", "Already Used", code, "This ticket was already scanned.");
-    scanProcessing = false;
+    scheduleScanCooldown(1500);
     return;
   }
   
@@ -888,12 +971,22 @@ function handleScannedCode(code) {
   setTimeout(async () => {
     await saveTickets(tickets);
     await updateDashboard();
-    scanProcessing = false;
   }, 0);
+
+  scheduleScanCooldown(1200);
 }
 
 // Show professional scan feedback modal
 function showScanFeedback(type, title, code, message) {
+  const hideDelay = type === "success" ? 2500 : 3000;
+
+  if (feedbackTapHandler) {
+    scanFeedbackEl.removeEventListener("click", feedbackTapHandler);
+    feedbackTapHandler = null;
+  }
+
+  clearTimeout(feedbackHideTimer);
+
   // Set icon based on type
   feedbackIconEl.className = "feedback-icon " + type;
   if (type === "success") {
@@ -908,15 +1001,38 @@ function showScanFeedback(type, title, code, message) {
   feedbackTitleEl.textContent = title;
   feedbackCodeEl.textContent = code;
   feedbackMessageEl.textContent = message;
+  if (!feedbackMessageEl.dataset.appendedHint) {
+    const hintEl = document.createElement("div");
+    hintEl.className = "feedback-hint";
+    hintEl.textContent = "Tap anywhere to scan the next ticket.";
+    feedbackMessageEl.parentElement.appendChild(hintEl);
+    feedbackMessageEl.dataset.appendedHint = "true";
+  }
   
   // Show modal
   scanFeedbackEl.classList.remove("hidden");
   
-  // Auto-hide after 2.5 seconds for success, 3 seconds for others
-  const hideDelay = type === "success" ? 2500 : 3000;
-  setTimeout(() => {
+  const hideFeedback = (fromTap = false) => {
+    clearTimeout(feedbackHideTimer);
+    feedbackHideTimer = null;
     scanFeedbackEl.classList.add("hidden");
-  }, hideDelay);
+    if (feedbackTapHandler) {
+      scanFeedbackEl.removeEventListener("click", feedbackTapHandler);
+      feedbackTapHandler = null;
+    }
+    if (fromTap) {
+      clearTimeout(scanCooldownTimer);
+      scanCooldownTimer = null;
+      scanProcessing = false;
+      lastScannedCode = null;
+      lastScanTime = 0;
+    }
+  };
+
+  feedbackTapHandler = () => hideFeedback(true);
+  scanFeedbackEl.addEventListener("click", feedbackTapHandler, { once: true });
+
+  feedbackHideTimer = setTimeout(() => hideFeedback(false), hideDelay);
   
   // Also update small result text
   const colors = {

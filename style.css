@@ -35,13 +35,13 @@ header {
   color: white;
   box-shadow: 0 2px 8px var(--shadow);
   position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
 }
 
 .header-install-btn {
-  position: absolute;
-  top: 50%;
-  right: 16px;
-  transform: translateY(-50%);
   padding: 8px 16px;
   background: rgba(255, 255, 255, 0.2);
   border: 2px solid white;
@@ -55,15 +55,16 @@ header {
   gap: 6px;
   transition: all 0.2s ease;
   backdrop-filter: blur(10px);
+  margin-top: 8px;
 }
 
 .header-install-btn:hover {
   background: rgba(255, 255, 255, 0.3);
-  transform: translateY(-50%) scale(1.05);
+  transform: scale(1.05);
 }
 
 .header-install-btn:active {
-  transform: translateY(-50%) scale(0.98);
+  transform: scale(0.98);
 }
 
 .logo {
@@ -71,20 +72,18 @@ header {
   height: 48px;
   vertical-align: middle;
   border-radius: 10px;
-  margin-right: 10px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  margin-bottom: 4px;
 }
 
 h1 { 
   margin: 6px 0 0; 
   font-size: 1.3rem; 
-  display: inline-block; 
-  vertical-align: middle;
   font-weight: 600;
 }
 
 .subtitle { 
-  margin-top: 8px; 
+  margin-top: 4px; 
   opacity: 0.95; 
   font-size: 0.9rem;
   font-weight: 400;
@@ -282,8 +281,16 @@ button:disabled {
 
 .action-buttons {
   display: flex;
-  gap: 8px;
+  gap: 12px;
   flex-wrap: wrap;
+  width: 100%;
+}
+
+.action-cluster {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 10px;
+  width: 100%;
 }
 
 .action-btn {
@@ -339,6 +346,20 @@ button:disabled {
   min-height: 100px;
 }
 
+.qr-status-banner {
+  width: 100%;
+  padding: 10px 12px;
+  background: #fffaf5;
+  border: 1px solid rgba(243, 156, 18, 0.4);
+  border-radius: 10px;
+  color: #b26a00;
+  font-size: 0.9rem;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+}
+
 .qrcode-grid .item { 
   width:140px; 
   text-align:center; 
@@ -351,9 +372,21 @@ button:disabled {
   transition: transform 0.2s, box-shadow 0.2s;
 }
 
+.qrcode-grid .item.qr-error-state {
+  border-color: rgba(220, 53, 69, 0.6);
+  box-shadow: 0 0 0 2px rgba(220, 53, 69, 0.15);
+}
+
 .qrcode-grid .item:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.qr-error {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--danger);
+  margin-top: 6px;
 }
 
 .qrcode-grid .empty-state {
@@ -377,6 +410,20 @@ button:disabled {
   border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 2px 8px var(--shadow);
+}
+
+.scanner-shell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.scanner-tip {
+  font-size: 0.85rem;
+  color: var(--muted);
+  text-align: center;
+  max-width: 320px;
 }
 
 .scan-result { 
@@ -459,6 +506,12 @@ button:disabled {
   font-size: 0.95rem;
   color: #666;
   margin-top: 8px;
+}
+
+.feedback-hint {
+  margin-top: 14px;
+  font-size: 0.85rem;
+  color: var(--muted);
 }
 
 @keyframes fadeIn {
@@ -560,7 +613,7 @@ footer {
   header {
     padding: 16px 12px;
   }
-  
+
   h1 {
     font-size: 1.1rem;
   }
@@ -570,10 +623,7 @@ footer {
   }
   
   .header-install-btn {
-    position: static;
-    transform: none;
-    margin-top: 12px;
-    width: auto;
+    width: 100%;
     font-size: 0.85rem;
     padding: 8px 14px;
   }
@@ -629,6 +679,10 @@ footer {
     width: 100%;
   }
   
+  .action-cluster {
+    grid-template-columns: 1fr;
+  }
+  
   .action-btn {
     width: 100%;
     justify-content: center;
@@ -674,17 +728,25 @@ footer {
     max-width: 100%;
   }
   
-  .feedback-content {
-    padding: 24px 20px;
-    max-width: 90%;
-  }
-  
   .feedback-icon {
     font-size: 56px;
   }
   
   .feedback-title {
     font-size: 1.3rem;
+  }
+
+  .scan-feedback {
+    align-items: flex-end;
+    padding: 16px;
+  }
+
+  .feedback-content {
+    width: 100%;
+    max-width: 420px;
+    padding: 24px 20px;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
   }
   
   .settings-group {
@@ -699,6 +761,14 @@ footer {
 @media (max-width: 480px) {
   header {
     padding: 14px 10px;
+  }
+  
+  .header-top {
+    gap: 10px;
+  }
+  
+  .header-install-btn {
+    margin-top: 8px;
   }
   
   .logo {
@@ -739,5 +809,9 @@ footer {
   .action-btn {
     font-size: 0.85rem;
     padding: 10px 14px;
+  }
+
+  .scanner-tip {
+    font-size: 0.8rem;
   }
 }
