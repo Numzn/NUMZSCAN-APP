@@ -211,6 +211,9 @@ const exportSettingsBtn = document.getElementById("exportSettingsBtn");
 const exportJSONSettingsBtn = document.getElementById("exportJSONSettingsBtn");
 const importSettingsBtn = document.getElementById("importSettingsBtn");
 const importSettingsFile = document.getElementById("importSettingsFile");
+const syncAlert = document.getElementById("syncAlert");
+const syncAlertText = document.getElementById("syncAlertText");
+const syncAlertDismiss = document.getElementById("syncAlertDismiss");
 const qrcodesEl = document.getElementById("qrcodes");
 const ticketCountInput = document.getElementById("ticketCount");
 
@@ -346,6 +349,7 @@ let supabaseSyncEnabled = false;
 let supabaseSyncTimer = null;
 let supabaseStatus = { pending: 0, syncing: false, lastSyncAt: null, online: typeof navigator !== "undefined" ? navigator.onLine : true };
 let supabaseAnalytics = null;
+let lastSyncError = null;
 
 function isSupabaseReady() {
   if (typeof window === "undefined") return false;
@@ -362,6 +366,7 @@ function isSupabaseReady() {
 function setupSupabaseSync() {
   if (!isSupabaseReady()) {
     updateSyncIndicator({ pending: 0, syncing: false, online: navigator.onLine });
+    hideSyncAlert();
     return;
   }
   try {
@@ -372,6 +377,9 @@ function setupSupabaseSync() {
       debugLog("[Supabase] status", status);
       updateSyncIndicator(status);
     });
+    if (SupabaseSync.onError) {
+      SupabaseSync.onError(handleSupabaseError);
+    }
     SupabaseSync.flushQueue();
     syncFromSupabase();
     if (supabaseSyncTimer) clearInterval(supabaseSyncTimer);
@@ -516,11 +524,17 @@ if (document.readyState === 'loading') {
 window.addEventListener('online', () => {
   supabaseStatus.online = true;
   updateSyncIndicator(supabaseStatus);
+  if (!lastSyncError) {
+    hideSyncAlert();
+  }
 });
 
 window.addEventListener('offline', () => {
   supabaseStatus.online = false;
   updateSyncIndicator(supabaseStatus);
+  if (supabaseSyncEnabled) {
+    handleSupabaseError(new Error("Offline"));
+  }
 });
 
 window.addEventListener('beforeunload', () => {
@@ -824,6 +838,10 @@ if (importCsvBtn && importCsvFile) {
   importCsvFile.addEventListener("change", handleCsvImport);
 }
 
+if (syncAlertDismiss) {
+  syncAlertDismiss.addEventListener("click", hideSyncAlert);
+}
+
 async function handleCsvImport(event) {
   const file = event.target.files[0];
   event.target.value = "";
@@ -994,6 +1012,33 @@ function cleanCsvValue(value) {
     return trimmed.slice(1, -1).trim();
   }
   return trimmed;
+}
+
+function showSyncAlert(message) {
+  if (!syncAlert || !syncAlertText) return;
+  syncAlertText.textContent = message;
+  syncAlert.classList.remove("hidden");
+}
+
+function hideSyncAlert() {
+  if (!syncAlert) return;
+  syncAlert.classList.add("hidden");
+}
+
+function handleSupabaseError(error) {
+  lastSyncError = error;
+  if (!error) {
+    hideSyncAlert();
+    return;
+  }
+  if (!navigator.onLine) {
+    showSyncAlert("Offline – sync will resume automatically when you reconnect.");
+    return;
+  }
+  const message = error.message && error.message !== "Offline"
+    ? `Cloud sync failed: ${error.message}`
+    : "Cloud sync is temporarily unavailable. Please check your connection.";
+  showSyncAlert(message);
 }
 
 // ---------- Import JSON (backup restore / sync) ----------

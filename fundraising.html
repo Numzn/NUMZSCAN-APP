@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>LHG Bigoca Fundraising Dashboard</title>
+    <link rel="stylesheet" href="fundraising.css" />
+  </head>
+  <body>
+    <div id="app" class="app">
+      <header class="hero">
+        <div class="hero-content">
+          <h1>Matebeto Sunday 2025</h1>
+          <p class="hero-subtitle">Latter House of Glory Bigoca — “Our Land, Our Home”</p>
+          <p class="hero-mission">Raising K50,000 to secure permanent land for the church</p>
+        </div>
+        <div class="hero-progress">
+          <div class="progress-stats">
+            <div class="stat">
+              <span class="stat-label">Current</span>
+              <span id="currentAmount" class="stat-value">K0</span>
+            </div>
+            <div class="stat">
+              <span class="stat-label">Target</span>
+              <span id="targetAmount" class="stat-value">K0</span>
+            </div>
+          </div>
+          <div class="progress-bar" aria-label="fundraising progress">
+            <div id="progressFill" class="progress-fill"></div>
+            <div class="progress-milestones">
+              <span data-percent="25">Seed Planted</span>
+              <span data-percent="50">Land Secured</span>
+              <span data-percent="75">Building Begins</span>
+              <span data-percent="100">Home Established</span>
+            </div>
+          </div>
+          <p id="progressVerse" class="progress-verse"></p>
+        </div>
+      </header>
+
+      <main class="content">
+        <section class="milestones" aria-label="milestone journey">
+          <article id="milestone25" class="milestone-card">
+            <h2>Seed Planted</h2>
+            <p>John 12:24 — “Unless a seed falls to the ground…”</p>
+            <div class="milestone-visual seed"></div>
+          </article>
+          <article id="milestone50" class="milestone-card">
+            <h2>Land Secured</h2>
+            <p>Deuteronomy 11:11 — “A land of hills and valleys…”</p>
+            <div class="milestone-visual land"></div>
+          </article>
+          <article id="milestone75" class="milestone-card">
+            <h2>Building Begins</h2>
+            <p>Psalm 127:1 — “Unless the Lord builds the house…”</p>
+            <div class="milestone-visual build"></div>
+          </article>
+          <article id="milestone100" class="milestone-card">
+            <h2>Home Established</h2>
+            <p>Isaiah 56:7 — “My house will be called a house of prayer…”</p>
+            <div class="milestone-visual home"></div>
+          </article>
+        </section>
+
+        <section class="inputs" aria-label="Contribution inputs">
+          <div class="input-card">
+            <h3>AUTO — Ticket Scans</h3>
+            <p>Connected to NumzQR ticket sales.</p>
+            <ul id="ticketStats" class="ticket-stats"></ul>
+            <button id="simulateTicket" type="button">Simulate Ticket Scan</button>
+          </div>
+          <div class="input-card">
+            <h3>MANUAL — Admin Entry</h3>
+            <form id="manualForm">
+              <label>
+                Contribution Type
+                <select id="entryType">
+                  <option value="bulk_tickets">Bulk Ticket Sales</option>
+                  <option value="donation">Direct Donation</option>
+                  <option value="vip">VIP Ticket (Multiplier)</option>
+                  <option value="cash">Offline/Cash Payment</option>
+                </select>
+              </label>
+              <label>
+                Amount (ZMW)
+                <input id="entryAmount" type="number" min="1" required />
+              </label>
+              <label>
+                Notes
+                <input id="entryNotes" type="text" placeholder="e.g., Family contribution, pledged" />
+              </label>
+              <button type="submit">Add Contribution</button>
+            </form>
+          </div>
+        </section>
+
+        <section class="testimonies" aria-label="testimonies">
+          <h2>Testimonies</h2>
+          <div id="testimonyDisplay" class="testimony-display"></div>
+        </section>
+      </main>
+
+      <footer class="footer">
+        <p>“Every brick represents a family’s faith. Twalipoka!”</p>
+      </footer>
+    </div>
+
+    <div id="celebrationContainer" class="celebration hidden"></div>
+
+    <script src="fundraising.js" type="module"></script>
+  </body>
+</html>
+

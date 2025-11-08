@@ -1,0 +1,16 @@
+{
+  "targetAmount": 50000,
+  "currentAmount": 25000,
+  "testimonies": [
+    "“Our families believe this land will host generations of faithful worship.”",
+    "“Each contribution is a brick in the home God is building with us.”",
+    "“Twalipoka! Together we rise to plant the house of God.”"
+  ],
+  "milestoneVerses": {
+    "25": "John 12:24 — Unless a seed falls to the ground and dies, it remains a single seed.",
+    "50": "Deuteronomy 11:11 — A land of hills and valleys, which drinks water from the rain of heaven.",
+    "75": "Psalm 127:1 — Unless the Lord builds the house, the builders labour in vain.",
+    "100": "Isaiah 56:7 — My house will be called a house of prayer for all nations."
+  }
+}
+

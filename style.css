@@ -149,6 +149,45 @@ h1 {
   100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
 }
 
+.sync-alert {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(239, 68, 68, 0.95);
+  color: #fff;
+  padding: 12px 16px;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(239, 68, 68, 0.25);
+  z-index: 3000;
+  max-width: 320px;
+  line-height: 1.4;
+}
+
+.sync-alert.hidden {
+  display: none;
+}
+
+.sync-alert .sync-alert-icon {
+  font-size: 1.2rem;
+}
+
+.sync-alert button {
+  background: transparent;
+  border: none;
+  color: inherit;
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+
+.sync-alert button:hover {
+  opacity: 0.8;
+}
+
 .sync-summary {
   display: flex;
   flex-direction: column;

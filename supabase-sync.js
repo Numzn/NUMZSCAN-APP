@@ -15,6 +15,7 @@
     syncing: false,
     lastSyncAt: null,
     listeners: new Set(),
+    errorListeners: new Set(),
   };
 
   function loadQueue() {
@@ -85,10 +86,25 @@
     });
   }
 
+  function notifyError(error) {
+    state.errorListeners.forEach((cb) => {
+      try {
+        cb(error);
+      } catch (err) {
+        console.error("[SupabaseSync] error listener failed", err);
+      }
+    });
+  }
+
   function onStatusChange(cb) {
     state.listeners.add(cb);
     cb({ pending: state.queue.length, syncing: state.syncing, lastSyncAt: state.lastSyncAt, online: navigator.onLine });
     return () => state.listeners.delete(cb);
+  }
+
+  function onError(cb) {
+    state.errorListeners.add(cb);
+    return () => state.errorListeners.delete(cb);
   }
 
   function enqueue(action) {
@@ -159,10 +175,14 @@
   async function flushQueue() {
     if (!navigator.onLine) {
       notify();
+      notifyError(new Error("Offline"));
       return;
     }
     if (state.syncing || state.queue.length === 0) {
       notify();
+      if (state.queue.length === 0) {
+        notifyError(null);
+      }
       return;
     }
     state.syncing = true;
@@ -175,6 +195,7 @@
           removeFromQueue(item.id);
         } catch (error) {
           console.error("[SupabaseSync] Failed to sync queue item", item, error);
+          notifyError(error);
           item.retries += 1;
           if (item.retries > MAX_RETRIES) {
             console.error("[SupabaseSync] Dropping queue item after max retries", item);
@@ -185,6 +206,7 @@
         }
       }
       persistLastSync(new Date().toISOString());
+      notifyError(null);
     } finally {
       state.syncing = false;
       persistQueue();
@@ -227,5 +249,6 @@
     fetchAllTickets,
     fetchTicketScansSince,
     onStatusChange,
+    onError,
   };
 })();
