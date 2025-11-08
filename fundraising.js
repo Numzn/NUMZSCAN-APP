@@ -23,10 +23,12 @@ let state = {
   contributions: [],
   testimonies: [],
   milestoneVerses: {},
+  autoSyncEnabled: true,
 };
 
 let testimonyIndex = 0;
 let testimonyTimer = null;
+let autoSyncEnabled = true;
 
 const currentAmountEl = document.getElementById("currentAmount");
 const targetAmountEl = document.getElementById("targetAmount");
@@ -36,7 +38,10 @@ const testimonyDisplayEl = document.getElementById("testimonyDisplay");
 const ticketStatsList = document.getElementById("ticketStats");
 const manualForm = document.getElementById("manualForm");
 const simulateTicketBtn = document.getElementById("simulateTicket");
+const autoSyncToggle = document.getElementById("autoSyncToggle");
 const celebrationContainer = document.getElementById("celebrationContainer");
+const contributionListEl = document.getElementById("contributionList");
+const clearContributionsBtn = document.getElementById("clearContributions");
 
 async function loadConfig() {
   try {
@@ -144,6 +149,49 @@ function renderTicketStats() {
   `;
 }
 
+function renderContributionList() {
+  if (!contributionListEl) return;
+  const recent = [...state.contributions]
+    .filter((entry) => entry.type !== "initial")
+    .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
+    .slice(0, 10);
+
+  if (recent.length === 0) {
+    contributionListEl.innerHTML = "<li class=\"contribution-item\"><strong>No recent contributions yet.</strong><span class=\"contribution-meta\">Be the first to give towards the land.</span></li>";
+    return;
+  }
+
+  contributionListEl.innerHTML = recent
+    .map((entry) => {
+      const label = contributionLabel(entry.type);
+      const amount = formatCurrency(entry.amount || 0);
+      const note = entry.notes ? ` — ${entry.notes}` : "";
+      const time = entry.createdAt ? new Date(entry.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "";
+      return `
+        <li class="contribution-item">
+          <strong>${label}: ${amount}${note}</strong>
+          <span class="contribution-meta">${time || "Today"} • ${entry.type}</span>
+        </li>`;
+    })
+    .join("");
+}
+
+function contributionLabel(type) {
+  switch (type) {
+    case "ticket":
+    case "bulk_tickets":
+      return "Ticket";
+    case "donation":
+      return "Donation";
+    case "vip":
+      return "VIP Ticket";
+    case "cash":
+      return "Cash";
+    default:
+      return "Contribution";
+  }
+}
+
 function computeContributionTotals() {
   return state.contributions.reduce((acc, entry) => {
     acc.count += 1;
@@ -178,12 +226,17 @@ function startTestimonyLoop() {
   testimonyTimer = setInterval(showNext, TESTIMONY_INTERVAL);
 }
 
+function recalculateTotals() {
+  state.currentAmount = state.contributions.reduce((sum, entry) => sum + (entry.amount || 0), 0);
+}
+
 function addContribution(entry) {
   state.contributions.push(entry);
-  state.currentAmount += entry.amount || 0;
+  recalculateTotals();
   saveState();
   updateProgressDisplay();
   renderTicketStats();
+  renderContributionList();
 }
 
 function handleManualSubmit(event) {
@@ -221,8 +274,24 @@ function triggerCelebrationMessage(message) {
   setTimeout(() => celebrationContainer.classList.add("hidden"), 2600);
 }
 
+function handleClearContributions() {
+  if (!confirm("This will clear contribution history (except the initial amount). Continue?")) {
+    return;
+  }
+  state.contributions = state.contributions.filter((entry) => entry.type === "initial");
+  recalculateTotals();
+  saveState();
+  updateProgressDisplay();
+  renderTicketStats();
+  renderContributionList();
+}
+
 function simulateTicketScan() {
   const ticketAmount = 50; // Example ticket amount
+  if (!autoSyncEnabled) {
+    triggerCelebrationMessage("Auto sync paused — ticket not counted.");
+    return;
+  }
   addContribution({
     id: `ticket-${Date.now()}`,
     type: "ticket",
@@ -240,6 +309,17 @@ function bindEvents() {
   if (simulateTicketBtn) {
     simulateTicketBtn.addEventListener("click", simulateTicketScan);
   }
+  if (autoSyncToggle) {
+    autoSyncToggle.addEventListener("change", (event) => {
+      autoSyncEnabled = event.target.checked;
+      state.autoSyncEnabled = autoSyncEnabled;
+      saveState();
+      triggerCelebrationMessage(autoSyncEnabled ? "Auto sync enabled." : "Auto sync paused.");
+    });
+  }
+  if (clearContributionsBtn) {
+    clearContributionsBtn.addEventListener("click", handleClearContributions);
+  }
 }
 
 async function init() {
@@ -251,13 +331,64 @@ async function init() {
         ...config,
         contributions: [{ id: "initial", type: "initial", amount: config.currentAmount, createdAt: new Date().toISOString() }]
       };
+  if (stored && typeof stored.autoSyncEnabled === "boolean") {
+    autoSyncEnabled = stored.autoSyncEnabled;
+  } else {
+    autoSyncEnabled = autoSyncToggle ? autoSyncToggle.checked : true;
+  }
+  state.autoSyncEnabled = autoSyncEnabled;
+  if (autoSyncToggle) {
+    autoSyncToggle.checked = autoSyncEnabled;
+  }
+  recalculateTotals();
 
   updateProgressDisplay();
   renderTicketStats();
+  renderContributionList();
   startTestimonyLoop();
   bindEvents();
+  exposeBridge();
   saveState();
 }
 
 document.addEventListener("DOMContentLoaded", init);
+
+function exposeBridge() {
+  window.FundraisingDashboard = {
+    recordTicketSale(amount = 50, meta = {}) {
+      if (!autoSyncEnabled) return;
+      addContribution({
+        id: `ticket-${Date.now()}`,
+        type: "ticket",
+        amount,
+        source: "auto",
+        metadata: meta,
+        createdAt: new Date().toISOString(),
+      });
+      triggerCelebrationMessage(`Ticket scanned! +${formatCurrency(amount)}`);
+    },
+    addContribution(entry) {
+      addContribution({
+        id: entry.id || `manual-${Date.now()}`,
+        type: entry.type || "donation",
+        amount: entry.amount || 0,
+        notes: entry.notes || "",
+        metadata: entry.metadata || {},
+        createdAt: entry.createdAt || new Date().toISOString(),
+      });
+      triggerCelebrationMessage(`Contribution added: ${formatCurrency(entry.amount || 0)}`);
+    },
+    getState() {
+      return { ...state, autoSyncEnabled };
+    },
+    setAutoSync(enabled) {
+      autoSyncEnabled = Boolean(enabled);
+      state.autoSyncEnabled = autoSyncEnabled;
+      if (autoSyncToggle) {
+        autoSyncToggle.checked = autoSyncEnabled;
+      }
+      saveState();
+    }
+  };
+}
 

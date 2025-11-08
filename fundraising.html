@@ -68,6 +68,13 @@
             <p>Connected to NumzQR ticket sales.</p>
             <ul id="ticketStats" class="ticket-stats"></ul>
             <button id="simulateTicket" type="button">Simulate Ticket Scan</button>
+            <div class="auto-sync">
+              <label class="switch">
+                <input id="autoSyncToggle" type="checkbox" checked />
+                <span class="slider"></span>
+              </label>
+              <span>Auto-sync contributions from QR scanner</span>
+            </div>
           </div>
           <div class="input-card">
             <h3>MANUAL — Admin Entry</h3>
@@ -92,6 +99,14 @@
               <button type="submit">Add Contribution</button>
             </form>
           </div>
+        </section>
+
+        <section class="contributions" aria-label="recent contributions">
+          <div class="contributions-header">
+            <h2>Recent Contributions</h2>
+            <button id="clearContributions" type="button" class="link-button">Clear history</button>
+          </div>
+          <ul id="contributionList" class="contribution-list"></ul>
         </section>
 
         <section class="testimonies" aria-label="testimonies">
