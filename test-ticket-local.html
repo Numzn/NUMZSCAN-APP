@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test Ticket Page Locally</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 600px;
+      margin: 50px auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    .test-box {
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    input {
+      width: 100%;
+      padding: 10px;
+      font-size: 16px;
+      margin: 10px 0;
+      border: 2px solid #ddd;
+      border-radius: 5px;
+    }
+    button {
+      background: #007bff;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+      margin: 10px 5px;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+    iframe {
+      width: 100%;
+      height: 600px;
+      border: 2px solid #ddd;
+      border-radius: 5px;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="test-box">
+    <h1>🧪 Test Ticket Page Locally</h1>
+    <p>Enter a ticket ID to test how the ticket page will look:</p>
+    <input type="text" id="ticketId" value="LHG-TK01-TEST" placeholder="Enter ticket ID">
+    <button onclick="testTicket()">Test Ticket Page</button>
+    <button onclick="testInNewTab()">Open in New Tab</button>
+    
+    <h3>Preview:</h3>
+    <iframe id="preview" src="ticket-page.html#LHG-TK01-TEST"></iframe>
+  </div>
+
+  <script>
+    function testTicket() {
+      const ticketId = document.getElementById('ticketId').value || 'LHG-TK01-TEST';
+      // Use hash for local testing (since we can't do server routing locally)
+      document.getElementById('preview').src = `ticket-page.html#${ticketId}`;
+    }
+    
+    function testInNewTab() {
+      const ticketId = document.getElementById('ticketId').value || 'LHG-TK01-TEST';
+      // Simulate the URL structure
+      window.open(`ticket-page.html#${ticketId}`, '_blank');
+    }
+    
+    // Update ticket page to handle hash
+    window.addEventListener('load', () => {
+      testTicket();
+    });
+  </script>
+</body>
+</html>

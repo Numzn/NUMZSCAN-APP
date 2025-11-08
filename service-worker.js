@@ -1,4 +1,4 @@
-const CACHE_NAME = 'offline-qr-v2';
+const CACHE_NAME = 'offline-qr-v3'; // Updated to force cache refresh for URL QR codes
 
 // Get the base path from the service worker location
 let basePath = self.location.pathname.replace('/service-worker.js', '');

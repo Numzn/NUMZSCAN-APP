@@ -1,0 +1,8 @@
+# Redirects for ticket URLs
+# This file is used by Netlify, but you can adapt it for other hosts
+
+# Redirect /t/* to ticket-page.html
+/t/*  /ticket-page.html  200
+
+# Optional: Redirect old /ticket/* format (backward compatibility)
+/ticket/*  /ticket-page.html  200

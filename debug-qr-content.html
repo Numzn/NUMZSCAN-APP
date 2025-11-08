@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Debug QR Code Content</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 50px auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    .card {
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+    h1 { color: #333; }
+    .code-block {
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 5px;
+      font-family: 'Courier New', monospace;
+      margin: 10px 0;
+      word-break: break-all;
+    }
+    .error { background: #f8d7da; color: #721c24; }
+    .success { background: #d4edda; color: #155724; }
+    button {
+      background: #007bff;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      margin: 5px;
+    }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</head>
+<body>
+  <div class="card">
+    <h1>🔍 Debug QR Code Content</h1>
+    <p>This page helps verify what content is actually in the QR codes.</p>
+    
+    <h2>Configuration Check</h2>
+    <div id="configCheck" class="code-block">Checking...</div>
+    
+    <h2>Test QR Code Generation</h2>
+    <input type="text" id="testId" value="LHG-TK01-TEST" style="width: 100%; padding: 10px; margin: 10px 0;">
+    <button onclick="generateTestQR()">Generate Test QR</button>
+    <div id="qrContainer" style="margin: 20px 0;"></div>
+    <div id="qrContent" class="code-block"></div>
+    
+    <h2>Verify App Configuration</h2>
+    <div id="appConfig" class="code-block">Loading script.js...</div>
+  </div>
+
+  <script>
+    // Simulate the app's configuration
+    const TICKET_BASE_URL = "https://program-pro-1.onrender.com?ticket=";
+    const USE_URL_IN_QR = true;
+    
+    function checkConfig() {
+      const configDiv = document.getElementById('configCheck');
+      configDiv.innerHTML = `
+        <strong>TICKET_BASE_URL:</strong> ${TICKET_BASE_URL}<br>
+        <strong>USE_URL_IN_QR:</strong> ${USE_URL_IN_QR}<br>
+        <strong>Expected QR Content:</strong> ${TICKET_BASE_URL}TICKET-ID
+      `;
+      if (USE_URL_IN_QR && TICKET_BASE_URL.includes('?ticket=')) {
+        configDiv.className = 'code-block success';
+      } else {
+        configDiv.className = 'code-block error';
+      }
+    }
+    
+    function generateTestQR() {
+      const testId = document.getElementById('testId').value;
+      const qrContent = USE_URL_IN_QR ? `${TICKET_BASE_URL}${testId}` : testId;
+      
+      document.getElementById('qrContainer').innerHTML = '<div id="qrCode"></div>';
+      document.getElementById('qrContent').textContent = `QR Code Content: ${qrContent}`;
+      
+      if (typeof QRCode !== 'undefined') {
+        new QRCode(document.getElementById('qrCode'), {
+          text: qrContent,
+          width: 200,
+          height: 200,
+          margin: 2
+        });
+      } else {
+        document.getElementById('qrContainer').innerHTML = '<p>QR library not loaded</p>';
+      }
+    }
+    
+    // Try to load and check the actual script.js
+    async function checkAppScript() {
+      try {
+        const response = await fetch('script.js');
+        const scriptContent = await response.text();
+        
+        // Extract configuration
+        const baseUrlMatch = scriptContent.match(/const TICKET_BASE_URL = ["']([^"']+)["']/);
+        const useUrlMatch = scriptContent.match(/const USE_URL_IN_QR = (true|false)/);
+        
+        const appConfigDiv = document.getElementById('appConfig');
+        if (baseUrlMatch && useUrlMatch) {
+          const appBaseUrl = baseUrlMatch[1];
+          const appUseUrl = useUrlMatch[1] === 'true';
+          
+          appConfigDiv.innerHTML = `
+            <strong>Actual script.js Configuration:</strong><br>
+            TICKET_BASE_URL: ${appBaseUrl}<br>
+            USE_URL_IN_QR: ${appUseUrl}<br><br>
+            ${appUseUrl ? 
+              `<span class="success">✅ URL mode is ENABLED</span><br>QR codes should contain: ${appBaseUrl}TICKET-ID` :
+              `<span class="error">❌ URL mode is DISABLED</span><br>QR codes will only contain ticket ID`
+            }
+          `;
+          
+          if (appUseUrl) {
+            appConfigDiv.className = 'code-block success';
+          } else {
+            appConfigDiv.className = 'code-block error';
+          }
+        } else {
+          appConfigDiv.innerHTML = 'Could not parse script.js configuration';
+          appConfigDiv.className = 'code-block error';
+        }
+      } catch (e) {
+        document.getElementById('appConfig').innerHTML = `Error loading script.js: ${e.message}`;
+        document.getElementById('appConfig').className = 'code-block error';
+      }
+    }
+    
+    checkConfig();
+    checkAppScript();
+    generateTestQR();
+  </script>
+</body>
+</html>

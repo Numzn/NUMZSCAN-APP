@@ -7,7 +7,12 @@
 let ticketCounter = 0; // Track ticket number across generation batches
 
 // ---------- Ticket URL Configuration ----------
-const TICKET_BASE_URL = "https://program-pro-1.onrender.com/t/";
+// Option 1: Query parameter (works with existing pages)
+const TICKET_BASE_URL = "https://program-pro-1.onrender.com?ticket=";
+// Option 2: Hash/fragment (alternative, uncomment to use)
+// const TICKET_BASE_URL = "https://program-pro-1.onrender.com#";
+// Option 3: Root path (if your site supports it)
+// const TICKET_BASE_URL = "https://program-pro-1.onrender.com/";
 const USE_URL_IN_QR = true; // Set to true to enable URL-based QR codes
 
 async function uid() {
@@ -307,6 +312,7 @@ function renderGrid() {
         return;
       }
       const qrText = USE_URL_IN_QR ? `${TICKET_BASE_URL}${t.id}` : t.id;
+      console.log(`[QR] Generating QR for ticket ${t.id}:`, qrText); // Debug log
       new QRCode(qrElement, { text: qrText, width: 100, height: 100, margin: 1 });
     } catch (e) {
       console.error("QRCode creation failed:", e);
@@ -950,24 +956,50 @@ function handleScannedCode(code) {
   // Extract ticket ID from URL or use code as-is
   let ticketId = code;
   
-  // Check for short URL format: /t/ID
-  if (code.includes("/t/")) {
-    const match = code.match(/\/t\/([^\/\?&#]+)/);
-    ticketId = match ? match[1] : code.split("/t/")[1]?.split(/[\/\?&#]/)[0];
-  }
-  // Check for long URL format: /ticket/ID (backward compat)
-  else if (code.includes("/ticket/")) {
-    const match = code.match(/\/ticket\/([^\/\?&#]+)/);
-    ticketId = match ? match[1] : code.split("/ticket/")[1]?.split(/[\/\?&#]/)[0];
-  }
-  // Generic HTTP(S) URL handling
-  else if (code.startsWith("http://") || code.startsWith("https://")) {
+  // Check if it's a URL
+  if (code.startsWith("http://") || code.startsWith("https://")) {
     try {
       const url = new URL(code);
-      const pathParts = url.pathname.split("/").filter(p => p);
-      ticketId = pathParts[pathParts.length - 1] || code;
+      
+      // Check for query parameter: ?ticket=ID
+      if (url.searchParams.has('ticket')) {
+        ticketId = url.searchParams.get('ticket');
+      }
+      // Check for hash fragment: #ID
+      else if (url.hash && url.hash.length > 1) {
+        ticketId = url.hash.substring(1); // Remove the # symbol
+      }
+      // Check for path-based: /t/ID or /ticket/ID
+      else if (url.pathname.includes("/t/")) {
+        const match = url.pathname.match(/\/t\/([^\/\?&#]+)/);
+        ticketId = match ? match[1] : url.pathname.split("/t/")[1]?.split(/[\/\?&#]/)[0];
+      }
+      else if (url.pathname.includes("/ticket/")) {
+        const match = url.pathname.match(/\/ticket\/([^\/\?&#]+)/);
+        ticketId = match ? match[1] : url.pathname.split("/ticket/")[1]?.split(/[\/\?&#]/)[0];
+      }
+      // Fallback: get last path segment
+      else {
+        const pathParts = url.pathname.split("/").filter(p => p);
+        ticketId = pathParts[pathParts.length - 1] || code;
+      }
     } catch (e) {
-      ticketId = code.split("/").pop() || code;
+      // If URL parsing fails, try simple string extraction
+      // Check for query parameter
+      if (code.includes("?ticket=")) {
+        ticketId = code.split("?ticket=")[1]?.split(/[&#]/)[0];
+      }
+      // Check for hash
+      else if (code.includes("#")) {
+        ticketId = code.split("#")[1]?.split(/[?&]/)[0];
+      }
+      // Check for path
+      else if (code.includes("/t/")) {
+        ticketId = code.split("/t/")[1]?.split(/[\/\?&#]/)[0];
+      }
+      else {
+        ticketId = code.split("/").pop()?.split(/[?#]/)[0] || code;
+      }
     }
   }
   // If already a ticket ID, use as-is (backward compatible)

@@ -1,0 +1,14 @@
+{
+  "routes": [
+    {
+      "src": "/t/(.*)",
+      "dest": "/ticket-page.html",
+      "status": 200
+    },
+    {
+      "src": "/ticket/(.*)",
+      "dest": "/ticket-page.html",
+      "status": 200
+    }
+  ]
+}

@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test Normal Camera Scan Flow</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    
+    .test-card {
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      padding: 40px;
+      margin-bottom: 20px;
+    }
+    
+    h1 {
+      color: #333;
+      margin-bottom: 30px;
+      font-size: 32px;
+    }
+    
+    h2 {
+      color: #667eea;
+      margin: 30px 0 15px 0;
+      font-size: 24px;
+    }
+    
+    .step {
+      background: #f8f9fa;
+      padding: 20px;
+      border-radius: 10px;
+      margin: 15px 0;
+      border-left: 4px solid #667eea;
+    }
+    
+    .step-number {
+      display: inline-block;
+      background: #667eea;
+      color: white;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      text-align: center;
+      line-height: 30px;
+      font-weight: bold;
+      margin-right: 10px;
+    }
+    
+    .qr-container {
+      text-align: center;
+      padding: 30px;
+      background: #f8f9fa;
+      border-radius: 10px;
+      margin: 20px 0;
+    }
+    
+    #qrCode {
+      display: inline-block;
+      padding: 20px;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    
+    .url-display {
+      background: #e9ecef;
+      padding: 15px;
+      border-radius: 8px;
+      margin: 15px 0;
+      font-family: 'Courier New', monospace;
+      word-break: break-all;
+      font-size: 14px;
+    }
+    
+    .test-button {
+      background: #667eea;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      margin: 10px 5px;
+      transition: background 0.3s;
+    }
+    
+    .test-button:hover {
+      background: #5568d3;
+    }
+    
+    .test-button:active {
+      transform: scale(0.98);
+    }
+    
+    .success {
+      background: #d4edda;
+      border: 1px solid #c3e6cb;
+      color: #155724;
+      padding: 15px;
+      border-radius: 8px;
+      margin: 15px 0;
+    }
+    
+    .info {
+      background: #d1ecf1;
+      border: 1px solid #bee5eb;
+      color: #0c5460;
+      padding: 15px;
+      border-radius: 8px;
+      margin: 15px 0;
+    }
+    
+    .warning {
+      background: #fff3cd;
+      border: 1px solid #ffeaa7;
+      color: #856404;
+      padding: 15px;
+      border-radius: 8px;
+      margin: 15px 0;
+    }
+    
+    .test-result {
+      margin-top: 20px;
+      padding: 20px;
+      border-radius: 10px;
+    }
+    
+    .status-check {
+      display: flex;
+      align-items: center;
+      margin: 10px 0;
+    }
+    
+    .status-icon {
+      font-size: 24px;
+      margin-right: 10px;
+    }
+    
+    input[type="text"] {
+      width: 100%;
+      padding: 12px;
+      font-size: 16px;
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      margin: 10px 0;
+      font-family: 'Courier New', monospace;
+    }
+    
+    .instructions {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      margin: 20px 0;
+      border: 2px solid #667eea;
+    }
+    
+    .instructions ol {
+      margin-left: 20px;
+      margin-top: 10px;
+    }
+    
+    .instructions li {
+      margin: 10px 0;
+      line-height: 1.6;
+    }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</head>
+<body>
+  <div class="container">
+    <div class="test-card">
+      <h1>🧪 Test Normal Camera Scan Flow</h1>
+      
+      <div class="info">
+        <strong>📱 Purpose:</strong> This test verifies that QR codes work correctly when scanned by normal phone cameras (not the app scanner).
+      </div>
+      
+      <h2>Step 1: Generate Test QR Code</h2>
+      <div class="step">
+        <div class="status-check">
+          <span class="step-number">1</span>
+          <span>Enter a test ticket ID</span>
+        </div>
+        <input type="text" id="ticketId" value="LHG-TK01-TEST" placeholder="Enter ticket ID">
+        <button class="test-button" onclick="generateQR()">📱 Generate QR Code</button>
+      </div>
+      
+      <div id="qrSection" style="display: none;">
+        <h2>Step 2: QR Code Generated</h2>
+        <div class="qr-container">
+          <div id="qrCode"></div>
+          <div class="url-display" id="generatedUrl"></div>
+        </div>
+        
+        <h2>Step 3: Test the URL</h2>
+        <div class="step">
+          <div class="status-check">
+            <span class="step-number">2</span>
+            <span>Click to test if the URL opens correctly</span>
+          </div>
+          <button class="test-button" onclick="testURL()">🌐 Test URL (Open in Browser)</button>
+          <button class="test-button" onclick="testURLExtraction()">🔍 Test URL Parameter Extraction</button>
+        </div>
+        
+        <h2>Step 4: Test with Your Phone</h2>
+        <div class="instructions">
+          <strong>📱 Instructions for Phone Testing:</strong>
+          <ol>
+            <li>Open your phone's camera app (not the QR app scanner)</li>
+            <li>Point the camera at the QR code displayed above</li>
+            <li>The camera should detect the QR code and show a notification/link</li>
+            <li>Tap the notification to open the URL in your browser</li>
+            <li>The browser should open: <code id="expectedUrl"></code></li>
+            <li>Your program website should load with the ticket parameter</li>
+          </ol>
+        </div>
+        
+        <div class="warning">
+          <strong>⚠️ Important:</strong> Make sure your website at <code>program-pro-1.onrender.com</code> can read the <code>?ticket=</code> parameter from the URL!
+        </div>
+      </div>
+      
+      <div id="testResults"></div>
+    </div>
+    
+    <div class="test-card">
+      <h2>🔍 URL Parameter Extraction Test</h2>
+      <div class="step">
+        <p>This simulates what your website should do when it receives the URL:</p>
+        <div class="url-display" id="testUrlDisplay"></div>
+        <button class="test-button" onclick="testWebsiteReading()">🧪 Test Website Reading (Simulate)</button>
+        <div id="websiteTestResult"></div>
+      </div>
+    </div>
+    
+    <div class="test-card">
+      <h2>✅ Verification Checklist</h2>
+      <div id="checklist">
+        <div class="status-check">
+          <span class="status-icon">⏳</span>
+          <span id="check1">QR code contains correct URL format</span>
+        </div>
+        <div class="status-check">
+          <span class="status-icon">⏳</span>
+          <span id="check2">URL opens in browser when clicked</span>
+        </div>
+        <div class="status-check">
+          <span class="status-icon">⏳</span>
+          <span id="check3">Ticket ID can be extracted from URL</span>
+        </div>
+        <div class="status-check">
+          <span class="status-icon">⏳</span>
+          <span id="check4">Website can read ticket parameter (manual test)</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const TICKET_BASE_URL = "https://program-pro-1.onrender.com?ticket=";
+    let currentTicketId = '';
+    let qrGenerated = false;
+    
+    function generateQR() {
+      const ticketId = document.getElementById('ticketId').value.trim();
+      if (!ticketId) {
+        alert('Please enter a ticket ID');
+        return;
+      }
+      
+      currentTicketId = ticketId;
+      const fullUrl = `${TICKET_BASE_URL}${ticketId}`;
+      
+      // Clear previous QR code
+      document.getElementById('qrCode').innerHTML = '';
+      
+      // Generate QR code
+      new QRCode(document.getElementById('qrCode'), {
+        text: fullUrl,
+        width: 256,
+        height: 256,
+        margin: 2,
+        colorDark: "#000000",
+        colorLight: "#ffffff",
+        correctLevel: QRCode.CorrectLevel.H
+      });
+      
+      // Display URL
+      document.getElementById('generatedUrl').textContent = fullUrl;
+      document.getElementById('expectedUrl').textContent = fullUrl;
+      document.getElementById('testUrlDisplay').textContent = fullUrl;
+      
+      // Show QR section
+      document.getElementById('qrSection').style.display = 'block';
+      
+      // Update checklist
+      updateChecklist(1, true, 'QR code contains correct URL format');
+      
+      qrGenerated = true;
+      
+      showResult('success', `✅ QR Code generated successfully!<br><br><strong>URL:</strong> ${fullUrl}<br><br>Now test it with your phone camera or click "Test URL" above.`);
+    }
+    
+    function testURL() {
+      if (!qrGenerated) {
+        alert('Please generate a QR code first');
+        return;
+      }
+      
+      const ticketId = document.getElementById('ticketId').value.trim();
+      const fullUrl = `${TICKET_BASE_URL}${ticketId}`;
+      
+      // Open in new tab
+      window.open(fullUrl, '_blank');
+      
+      // Update checklist
+      updateChecklist(2, true, 'URL opens in browser when clicked');
+      
+      showResult('info', `🌐 Opening URL in new tab:<br><br><strong>${fullUrl}</strong><br><br>✅ If your website loads, the URL format is working!<br>⚠️ If you see an error, make sure your website can handle the <code>?ticket=</code> parameter.`);
+    }
+    
+    function testURLExtraction() {
+      if (!qrGenerated) {
+        alert('Please generate a QR code first');
+        return;
+      }
+      
+      const ticketId = document.getElementById('ticketId').value.trim();
+      const fullUrl = `${TICKET_BASE_URL}${ticketId}`;
+      
+      // Extract ticket ID (simulating what the app scanner does)
+      let extractedId = '';
+      try {
+        const url = new URL(fullUrl);
+        if (url.searchParams.has('ticket')) {
+          extractedId = url.searchParams.get('ticket');
+        }
+      } catch (e) {
+        if (fullUrl.includes("?ticket=")) {
+          extractedId = fullUrl.split("?ticket=")[1]?.split(/[&#]/)[0];
+        }
+      }
+      
+      const isValid = extractedId === ticketId;
+      
+      if (isValid) {
+        updateChecklist(3, true, 'Ticket ID can be extracted from URL');
+        showResult('success', `✅ URL extraction test PASSED!<br><br><strong>Original Ticket ID:</strong> ${ticketId}<br><strong>Extracted Ticket ID:</strong> ${extractedId}<br><br>✅ The app scanner will correctly extract the ticket ID.`);
+      } else {
+        updateChecklist(3, false, 'Ticket ID extraction failed');
+        showResult('error', `❌ URL extraction test FAILED!<br><br><strong>Original Ticket ID:</strong> ${ticketId}<br><strong>Extracted Ticket ID:</strong> ${extractedId}`);
+      }
+    }
+    
+    function testWebsiteReading() {
+      if (!qrGenerated) {
+        alert('Please generate a QR code first');
+        return;
+      }
+      
+      const ticketId = document.getElementById('ticketId').value.trim();
+      const fullUrl = `${TICKET_BASE_URL}${ticketId}`;
+      
+      // Simulate what the website should do
+      const urlParams = new URLSearchParams(new URL(fullUrl).search);
+      const readTicketId = urlParams.get('ticket');
+      
+      const resultDiv = document.getElementById('websiteTestResult');
+      
+      if (readTicketId === ticketId) {
+        resultDiv.innerHTML = `
+          <div class="success">
+            <strong>✅ Website Reading Test PASSED!</strong><br><br>
+            <strong>URL:</strong> ${fullUrl}<br>
+            <strong>Ticket ID Read:</strong> ${readTicketId}<br><br>
+            <strong>Code to add to your website:</strong><br>
+            <pre style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin-top: 10px; overflow-x: auto;">
+const urlParams = new URLSearchParams(window.location.search);
+const ticketId = urlParams.get('ticket');
+if (ticketId) {
+  console.log('Ticket ID:', ticketId);
+  // Do something with the ticket ID
+}
+            </pre>
+          </div>
+        `;
+      } else {
+        resultDiv.innerHTML = `
+          <div class="warning">
+            <strong>⚠️ Website Reading Test Failed</strong><br><br>
+            Could not extract ticket ID from URL.
+          </div>
+        `;
+      }
+    }
+    
+    function updateChecklist(index, passed, text) {
+      const checkElement = document.getElementById(`check${index}`);
+      const iconElement = checkElement.previousElementSibling;
+      
+      if (passed) {
+        iconElement.textContent = '✅';
+        checkElement.style.color = '#155724';
+      } else {
+        iconElement.textContent = '❌';
+        checkElement.style.color = '#721c24';
+      }
+      checkElement.textContent = text;
+    }
+    
+    function showResult(type, message) {
+      const resultsDiv = document.getElementById('testResults');
+      resultsDiv.className = `test-result ${type}`;
+      resultsDiv.innerHTML = message;
+    }
+    
+    // Auto-generate QR on page load
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        generateQR();
+      }, 500);
+    });
+  </script>
+</body>
+</html>

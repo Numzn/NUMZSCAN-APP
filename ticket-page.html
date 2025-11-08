@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ticket Information</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    
+    .ticket-container {
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      max-width: 500px;
+      width: 100%;
+      padding: 40px;
+      text-align: center;
+    }
+    
+    .ticket-icon {
+      font-size: 64px;
+      margin-bottom: 20px;
+    }
+    
+    h1 {
+      color: #333;
+      margin-bottom: 10px;
+      font-size: 28px;
+    }
+    
+    .ticket-id {
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 10px;
+      margin: 20px 0;
+      font-family: 'Courier New', monospace;
+      font-size: 18px;
+      font-weight: bold;
+      color: #667eea;
+      word-break: break-all;
+    }
+    
+    .ticket-info {
+      color: #666;
+      line-height: 1.6;
+      margin: 20px 0;
+    }
+    
+    .status-badge {
+      display: inline-block;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-top: 15px;
+    }
+    
+    .status-valid {
+      background: #d4edda;
+      color: #155724;
+    }
+    
+    .event-info {
+      margin-top: 30px;
+      padding-top: 30px;
+      border-top: 1px solid #eee;
+    }
+    
+    .event-info h2 {
+      color: #333;
+      font-size: 20px;
+      margin-bottom: 15px;
+    }
+    
+    .event-info p {
+      color: #666;
+      line-height: 1.8;
+    }
+    
+    .footer {
+      margin-top: 30px;
+      padding-top: 20px;
+      border-top: 1px solid #eee;
+      color: #999;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="ticket-container">
+    <div class="ticket-icon">🎫</div>
+    <h1>Event Ticket</h1>
+    <div class="ticket-id" id="ticketId">Loading...</div>
+    <div class="ticket-info">
+      <p>This is a valid event ticket.</p>
+      <span class="status-badge status-valid">✓ Valid Ticket</span>
+    </div>
+    
+    <div class="event-info">
+      <h2>Event Information</h2>
+      <p>
+        Thank you for your ticket purchase!<br>
+        Present this ticket at the event entrance.<br>
+        For verification, use the official event app.
+      </p>
+    </div>
+    
+    <div class="footer">
+      <p>Scan this QR code with the event app for verification</p>
+    </div>
+  </div>
+
+  <script>
+    // Extract ticket ID from URL
+    function getTicketIdFromURL() {
+      // First, try hash routing (for local testing)
+      if (window.location.hash) {
+        return window.location.hash.replace('#', '');
+      }
+      
+      // Get current URL path
+      const path = window.location.pathname;
+      
+      // Handle /t/ID format
+      if (path.startsWith('/t/')) {
+        return path.replace('/t/', '').split('/')[0].split('?')[0];
+      }
+      
+      // Handle /ticket/ID format (backward compat)
+      if (path.startsWith('/ticket/')) {
+        return path.replace('/ticket/', '').split('/')[0].split('?')[0];
+      }
+      
+      // Try query parameter
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('id')) {
+        return params.get('id');
+      }
+      
+      // Fallback: get last segment of path
+      const segments = path.split('/').filter(s => s);
+      const lastSegment = segments[segments.length - 1];
+      
+      // If last segment is the filename (ticket-page.html), try to get from referrer or default
+      if (lastSegment === 'ticket-page.html' || lastSegment === '') {
+        // For local testing, return a default
+        return 'DEMO-TICKET-123';
+      }
+      
+      return lastSegment || 'UNKNOWN';
+    }
+    
+    // Display ticket ID
+    const ticketId = getTicketIdFromURL();
+    document.getElementById('ticketId').textContent = ticketId;
+    
+    // Update page title
+    document.title = `Ticket: ${ticketId}`;
+    
+    // You can add more functionality here, like:
+    // - Fetching ticket details from an API
+    // - Checking ticket validity
+    // - Displaying event-specific information
+    // - Showing ticket status
+    
+    console.log('Ticket ID:', ticketId);
+    console.log('Current URL:', window.location.href);
+    console.log('Path:', window.location.pathname);
+  </script>
+</body>
+</html>

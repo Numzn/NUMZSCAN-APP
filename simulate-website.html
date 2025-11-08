@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Program Website - Ticket Handler</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    
+    .container {
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      max-width: 600px;
+      width: 100%;
+      padding: 40px;
+      text-align: center;
+    }
+    
+    h1 {
+      color: #333;
+      margin-bottom: 20px;
+      font-size: 32px;
+    }
+    
+    .ticket-display {
+      background: #f8f9fa;
+      padding: 30px;
+      border-radius: 15px;
+      margin: 30px 0;
+      border: 2px solid #667eea;
+    }
+    
+    .ticket-id {
+      font-family: 'Courier New', monospace;
+      font-size: 24px;
+      font-weight: bold;
+      color: #667eea;
+      margin: 20px 0;
+      word-break: break-all;
+    }
+    
+    .status {
+      display: inline-block;
+      padding: 10px 20px;
+      border-radius: 25px;
+      font-weight: 600;
+      margin: 15px 0;
+    }
+    
+    .status-detected {
+      background: #d4edda;
+      color: #155724;
+    }
+    
+    .status-not-detected {
+      background: #f8d7da;
+      color: #721c24;
+    }
+    
+    .info-box {
+      background: #e7f3ff;
+      border-left: 4px solid #2196F3;
+      padding: 15px;
+      margin: 20px 0;
+      text-align: left;
+      border-radius: 5px;
+    }
+    
+    .info-box code {
+      background: #fff;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+    }
+    
+    .test-url {
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 8px;
+      margin: 20px 0;
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+      word-break: break-all;
+      text-align: left;
+    }
+    
+    .button {
+      background: #667eea;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      margin: 10px 5px;
+      text-decoration: none;
+      display: inline-block;
+    }
+    
+    .button:hover {
+      background: #5568d3;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🎫 Program Website</h1>
+    <p style="color: #666; margin-bottom: 30px;">This simulates your program website receiving a ticket</p>
+    
+    <div id="ticketInfo">
+      <div class="ticket-display">
+        <h2>Ticket Information</h2>
+        <div id="ticketStatus" class="status status-not-detected">
+          ⏳ Checking for ticket...
+        </div>
+        <div id="ticketIdDisplay" class="ticket-id" style="display: none;">
+          Loading...
+        </div>
+      </div>
+    </div>
+    
+    <div id="noTicket" style="display: none;">
+      <div class="info-box">
+        <strong>ℹ️ No Ticket Detected</strong><br><br>
+        This page simulates what happens when someone visits your program website.<br><br>
+        <strong>To test with a ticket:</strong><br>
+        Add <code>?ticket=TICKET-ID</code> to the URL, for example:<br>
+        <div class="test-url">?ticket=LHG-TK01-TEST</div>
+      </div>
+    </div>
+    
+    <div id="ticketDetected" style="display: none;">
+      <div class="info-box">
+        <strong>✅ Ticket Detected!</strong><br><br>
+        When a QR code is scanned by a normal camera, it will open this page with the ticket ID in the URL.<br><br>
+        <strong>Current URL:</strong><br>
+        <div class="test-url" id="currentUrl"></div>
+        <br>
+        <strong>Ticket ID Extracted:</strong><br>
+        <div class="test-url" id="extractedId"></div>
+      </div>
+      
+      <div class="info-box" style="background: #fff3cd; border-left-color: #ffc107;">
+        <strong>💡 What to do next:</strong><br><br>
+        Add this code to your actual program website to read the ticket ID:
+        <pre style="background: #fff; padding: 15px; border-radius: 5px; margin-top: 10px; overflow-x: auto; text-align: left; font-size: 12px;">
+const urlParams = new URLSearchParams(window.location.search);
+const ticketId = urlParams.get('ticket');
+
+if (ticketId) {
+  console.log('Ticket ID:', ticketId);
+  // Display ticket info, validate, etc.
+  // Your code here
+}
+        </pre>
+      </div>
+    </div>
+    
+    <div style="margin-top: 30px;">
+      <a href="test-normal-scan.html" class="button">← Back to Test Page</a>
+      <button class="button" onclick="window.location.href = '?ticket=LHG-TK01-TEST'">Test with Sample Ticket</button>
+    </div>
+  </div>
+
+  <script>
+    // This is the code that should be on your actual program website
+    function checkForTicket() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const ticketId = urlParams.get('ticket');
+      
+      const noTicketDiv = document.getElementById('noTicket');
+      const ticketDetectedDiv = document.getElementById('ticketDetected');
+      const ticketStatus = document.getElementById('ticketStatus');
+      const ticketIdDisplay = document.getElementById('ticketIdDisplay');
+      const extractedIdDisplay = document.getElementById('extractedId');
+      const currentUrlDisplay = document.getElementById('currentUrl');
+      
+      // Display current URL
+      currentUrlDisplay.textContent = window.location.href;
+      
+      if (ticketId) {
+        // Ticket detected!
+        noTicketDiv.style.display = 'none';
+        ticketDetectedDiv.style.display = 'block';
+        ticketStatus.className = 'status status-detected';
+        ticketStatus.innerHTML = '✅ Ticket Detected';
+        ticketIdDisplay.style.display = 'block';
+        ticketIdDisplay.textContent = ticketId;
+        extractedIdDisplay.textContent = ticketId;
+        
+        console.log('✅ Ticket ID detected:', ticketId);
+        
+        // Here you would typically:
+        // - Validate the ticket
+        // - Display ticket information
+        // - Show event details
+        // - etc.
+        
+      } else {
+        // No ticket detected
+        noTicketDiv.style.display = 'block';
+        ticketDetectedDiv.style.display = 'none';
+        ticketStatus.className = 'status status-not-detected';
+        ticketStatus.innerHTML = '❌ No Ticket Detected';
+        ticketIdDisplay.style.display = 'none';
+        
+        console.log('ℹ️ No ticket ID in URL');
+      }
+    }
+    
+    // Check for ticket on page load
+    checkForTicket();
+    
+    // Also check if URL changes (for single-page apps)
+    window.addEventListener('popstate', checkForTicket);
+  </script>
+</body>
+</html>

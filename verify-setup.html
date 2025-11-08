@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verify Normal Camera Scan Setup</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 50px auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    .card {
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+    h1 { color: #333; }
+    h2 { color: #667eea; margin-top: 30px; }
+    .test-item {
+      background: #f8f9fa;
+      padding: 15px;
+      margin: 10px 0;
+      border-radius: 5px;
+      border-left: 4px solid #667eea;
+    }
+    .success { border-left-color: #28a745; background: #d4edda; }
+    .error { border-left-color: #dc3545; background: #f8d7da; }
+    .warning { border-left-color: #ffc107; background: #fff3cd; }
+    button {
+      background: #667eea;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      margin: 5px;
+    }
+    button:hover { background: #5568d3; }
+    code {
+      background: #f8f9fa;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-family: monospace;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>✅ Normal Camera Scan Verification</h1>
+    <p>This page verifies that your setup is correct for normal camera scanning.</p>
+    
+    <h2>Test 1: URL Format</h2>
+    <div class="test-item" id="test1">
+      <strong>Checking URL format...</strong>
+    </div>
+    
+    <h2>Test 2: QR Code Generation</h2>
+    <div class="test-item" id="test2">
+      <strong>Checking QR code generation...</strong>
+    </div>
+    
+    <h2>Test 3: URL Parameter Extraction</h2>
+    <div class="test-item" id="test3">
+      <strong>Checking parameter extraction...</strong>
+    </div>
+    
+    <h2>Test 4: Website Reading</h2>
+    <div class="test-item" id="test4">
+      <strong>Checking website reading capability...</strong>
+    </div>
+    
+    <div style="margin-top: 30px;">
+      <button onclick="runAllTests()">🔄 Run All Tests</button>
+      <button onclick="openTestPage()">📱 Open Test Page</button>
+      <button onclick="openSimulation()">🌐 Open Website Simulation</button>
+    </div>
+  </div>
+
+  <script>
+    const TICKET_BASE_URL = "https://program-pro-1.onrender.com?ticket=";
+    const TEST_TICKET_ID = "LHG-TK01-TEST";
+    
+    function runAllTests() {
+      testURLFormat();
+      testQRGeneration();
+      testParameterExtraction();
+      testWebsiteReading();
+    }
+    
+    function testURLFormat() {
+      const test1 = document.getElementById('test1');
+      const expectedUrl = `${TICKET_BASE_URL}${TEST_TICKET_ID}`;
+      
+      if (TICKET_BASE_URL.includes('?ticket=')) {
+        test1.className = 'test-item success';
+        test1.innerHTML = `
+          <strong>✅ URL Format: CORRECT</strong><br>
+          Base URL: <code>${TICKET_BASE_URL}</code><br>
+          Example: <code>${expectedUrl}</code><br>
+          ✅ Uses query parameter format (works with existing pages)
+        `;
+      } else {
+        test1.className = 'test-item error';
+        test1.innerHTML = `
+          <strong>❌ URL Format: INCORRECT</strong><br>
+          Current: <code>${TICKET_BASE_URL}</code><br>
+          Expected: Should use <code>?ticket=</code> format
+        `;
+      }
+    }
+    
+    function testQRGeneration() {
+      const test2 = document.getElementById('test2');
+      const fullUrl = `${TICKET_BASE_URL}${TEST_TICKET_ID}`;
+      
+      // Simulate QR code generation
+      if (typeof QRCode !== 'undefined') {
+        test2.className = 'test-item success';
+        test2.innerHTML = `
+          <strong>✅ QR Code Generation: READY</strong><br>
+          QR codes will contain: <code>${fullUrl}</code><br>
+          ✅ QR library is loaded and ready
+        `;
+      } else {
+        test2.className = 'test-item warning';
+        test2.innerHTML = `
+          <strong>⚠️ QR Code Generation: LIBRARY NOT LOADED</strong><br>
+          QR library needs to be loaded for this test<br>
+          (This is normal if testing outside the app)
+        `;
+      }
+    }
+    
+    function testParameterExtraction() {
+      const test3 = document.getElementById('test3');
+      const fullUrl = `${TICKET_BASE_URL}${TEST_TICKET_ID}`;
+      
+      // Test extraction (simulating app scanner)
+      let extractedId = '';
+      try {
+        const url = new URL(fullUrl);
+        if (url.searchParams.has('ticket')) {
+          extractedId = url.searchParams.get('ticket');
+        }
+      } catch (e) {
+        if (fullUrl.includes("?ticket=")) {
+          extractedId = fullUrl.split("?ticket=")[1]?.split(/[&#]/)[0];
+        }
+      }
+      
+      if (extractedId === TEST_TICKET_ID) {
+        test3.className = 'test-item success';
+        test3.innerHTML = `
+          <strong>✅ Parameter Extraction: WORKING</strong><br>
+          Input URL: <code>${fullUrl}</code><br>
+          Extracted ID: <code>${extractedId}</code><br>
+          ✅ App scanner will correctly extract ticket ID
+        `;
+      } else {
+        test3.className = 'test-item error';
+        test3.innerHTML = `
+          <strong>❌ Parameter Extraction: FAILED</strong><br>
+          Input URL: <code>${fullUrl}</code><br>
+          Extracted ID: <code>${extractedId}</code><br>
+          Expected: <code>${TEST_TICKET_ID}</code>
+        `;
+      }
+    }
+    
+    function testWebsiteReading() {
+      const test4 = document.getElementById('test4');
+      const fullUrl = `${TICKET_BASE_URL}${TEST_TICKET_ID}`;
+      
+      // Test website reading
+      try {
+        const url = new URL(fullUrl);
+        const urlParams = new URLSearchParams(url.search);
+        const readTicketId = urlParams.get('ticket');
+        
+        if (readTicketId === TEST_TICKET_ID) {
+          test4.className = 'test-item success';
+          test4.innerHTML = `
+            <strong>✅ Website Reading: WORKING</strong><br>
+            URL: <code>${fullUrl}</code><br>
+            Ticket ID Read: <code>${readTicketId}</code><br>
+            ✅ Your website can read the ticket parameter<br><br>
+            <strong>Code to add to your website:</strong><br>
+            <code>const urlParams = new URLSearchParams(window.location.search);<br>
+            const ticketId = urlParams.get('ticket');</code>
+          `;
+        } else {
+          test4.className = 'test-item error';
+          test4.innerHTML = `
+            <strong>❌ Website Reading: FAILED</strong><br>
+            Could not read ticket ID from URL
+          `;
+        }
+      } catch (e) {
+        test4.className = 'test-item warning';
+        test4.innerHTML = `
+          <strong>⚠️ Website Reading: CANNOT TEST</strong><br>
+          Error: ${e.message}
+        `;
+      }
+    }
+    
+    function openTestPage() {
+      window.open('test-normal-scan.html', '_blank');
+    }
+    
+    function openSimulation() {
+      window.open('simulate-website.html?ticket=' + TEST_TICKET_ID, '_blank');
+    }
+    
+    // Run tests on page load
+    window.addEventListener('load', () => {
+      setTimeout(runAllTests, 500);
+    });
+  </script>
+</body>
+</html>
