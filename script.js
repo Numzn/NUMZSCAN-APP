@@ -6,6 +6,10 @@
 // ---------- Utilities ----------
 let ticketCounter = 0; // Track ticket number across generation batches
 
+// ---------- Ticket URL Configuration ----------
+const TICKET_BASE_URL = "https://program-pro-1.onrender.com/t/";
+const USE_URL_IN_QR = true; // Set to true to enable URL-based QR codes
+
 async function uid() {
   // Generate unique fancy ticket ID: LHG-TK01-XXXX format
   // Get sequential number from existing tickets + current batch
@@ -302,7 +306,8 @@ function renderGrid() {
         markFailure("QR library missing");
         return;
       }
-      new QRCode(qrElement, { text: t.id, width: 100, height: 100, margin: 1 });
+      const qrText = USE_URL_IN_QR ? `${TICKET_BASE_URL}${t.id}` : t.id;
+      new QRCode(qrElement, { text: qrText, width: 100, height: 100, margin: 1 });
     } catch (e) {
       console.error("QRCode creation failed:", e);
       markFailure("QR error: " + e.message);
@@ -751,8 +756,9 @@ function generateDataURLForQR(text) {
       el.style.visibility = "hidden";
       document.body.appendChild(el);
       
+      const qrText = USE_URL_IN_QR ? `${TICKET_BASE_URL}${text}` : text;
       new QRCode(el, { 
-        text, 
+        text: qrText, 
         width: 200, 
         height: 200,
         colorDark: "#000000",
@@ -941,18 +947,48 @@ function handleScannedCode(code) {
   lastScannedCode = code;
   lastScanTime = now;
   
+  // Extract ticket ID from URL or use code as-is
+  let ticketId = code;
+  
+  // Check for short URL format: /t/ID
+  if (code.includes("/t/")) {
+    const match = code.match(/\/t\/([^\/\?&#]+)/);
+    ticketId = match ? match[1] : code.split("/t/")[1]?.split(/[\/\?&#]/)[0];
+  }
+  // Check for long URL format: /ticket/ID (backward compat)
+  else if (code.includes("/ticket/")) {
+    const match = code.match(/\/ticket\/([^\/\?&#]+)/);
+    ticketId = match ? match[1] : code.split("/ticket/")[1]?.split(/[\/\?&#]/)[0];
+  }
+  // Generic HTTP(S) URL handling
+  else if (code.startsWith("http://") || code.startsWith("https://")) {
+    try {
+      const url = new URL(code);
+      const pathParts = url.pathname.split("/").filter(p => p);
+      ticketId = pathParts[pathParts.length - 1] || code;
+    } catch (e) {
+      ticketId = code.split("/").pop() || code;
+    }
+  }
+  // If already a ticket ID, use as-is (backward compatible)
+  
+  // Safety check: ensure ticketId is valid (fallback to original code if extraction failed)
+  if (!ticketId || ticketId.trim() === '') {
+    ticketId = code;
+  }
+  
   // Use cached Map for O(1) lookup - much faster than array.find()
   if (!ticketMap) rebuildTicketMap();
-  const existing = ticketMap.get(code);
+  const existing = ticketMap.get(ticketId);
   
   if (!existing) {
-    showScanFeedback("error", "Unknown Ticket", code, "This ticket is not in the system.");
+    showScanFeedback("error", "Unknown Ticket", ticketId, "This ticket is not in the system.");
     scheduleScanCooldown(1500);
     return;
   }
   
   if (existing.used) {
-    showScanFeedback("warning", "Already Used", code, "This ticket was already scanned.");
+    showScanFeedback("warning", "Already Used", ticketId, "This ticket was already scanned.");
     scheduleScanCooldown(1500);
     return;
   }
@@ -962,10 +998,10 @@ function handleScannedCode(code) {
   existing.usedAt = new Date().toISOString();
   
   // Show success feedback
-  showScanFeedback("success", "Ticket Accepted", code, "Entry granted. Welcome!");
+  showScanFeedback("success", "Ticket Accepted", ticketId, "Entry granted. Welcome!");
   
   // Update map immediately for next scan
-  ticketMap.set(code, existing);
+  ticketMap.set(ticketId, existing);
   
   // Save and update dashboard (async to not block UI)
   setTimeout(async () => {
