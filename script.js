@@ -15,6 +15,21 @@ const TICKET_BASE_URL = "https://program-pro-1.onrender.com?ticket=";
 // const TICKET_BASE_URL = "https://program-pro-1.onrender.com/";
 const USE_URL_IN_QR = true; // Set to true to enable URL-based QR codes
 
+// ---------- App Version & Debug ----------
+const APP_VERSION = window.APP_VERSION || "2025-11-08-1";
+window.APP_VERSION = APP_VERSION;
+const DEBUG_LOGGING_ENABLED = false;
+const EVENT_ID = "default-event";
+const DEFAULT_SCAN_LOCATION = "gate-default";
+
+function debugLog(...args) {
+  if (DEBUG_LOGGING_ENABLED) {
+    console.log(...args);
+  }
+}
+
+let globalLoaderHideTimer = null;
+
 async function uid() {
   // Generate unique fancy ticket ID: LHG-TK01-XXXX format
   // Get sequential number from existing tickets + current batch
@@ -118,9 +133,20 @@ async function loadTickets() {
 
     return new Promise((resolve, reject) => {
       request.onsuccess = () => {
-        const tickets = request.result || [];
-        console.log(`[DB] Loaded ${tickets.length} tickets`);
-        resolve(tickets);
+        const fetched = request.result || [];
+        const normalized = fetched.map((ticket) => ({
+          id: ticket.id,
+          used: Boolean(ticket.used),
+          createdAt: ticket.createdAt || new Date().toISOString(),
+          usedAt: ticket.usedAt || null,
+          syncStatus: ticket.syncStatus || "local",
+          lastSyncedAt: ticket.lastSyncedAt || null,
+          pendingAction: ticket.pendingAction || null,
+          metadata: ticket.metadata || {},
+          source: ticket.source || "local",
+        }));
+        console.log(`[DB] Loaded ${normalized.length} tickets`);
+        resolve(normalized);
       };
 
       request.onerror = () => {
@@ -166,6 +192,10 @@ async function migrateFromLocalStorage() {
 }
 
 // ---------- DOM refs ----------
+const globalLoader = document.getElementById("globalLoader");
+const loaderMessageEl = document.getElementById("loaderMessage");
+const syncStatusBadge = document.getElementById("syncStatusBadge");
+const syncStatusText = document.getElementById("syncStatusText");
 const generateBtn = document.getElementById("generateBtn");
 const downloadSheetBtn = document.getElementById("downloadSheetBtn");
 const exportBtn = document.getElementById("exportBtn");
@@ -194,11 +224,224 @@ const usedTicketsEl = document.getElementById("usedTickets");
 const unusedTicketsEl = document.getElementById("unusedTickets");
 const resetBtn = document.getElementById("resetBtn");
 
+function setGlobalLoading(isLoading, message = "Working...") {
+  if (!globalLoader || !loaderMessageEl) return;
+  if (globalLoaderHideTimer) {
+    clearTimeout(globalLoaderHideTimer);
+    globalLoaderHideTimer = null;
+  }
+  if (isLoading) {
+    loaderMessageEl.textContent = message;
+    if (globalLoader.classList.contains("hidden")) {
+      globalLoader.classList.remove("hidden");
+      requestAnimationFrame(() => globalLoader.classList.add("show"));
+    } else {
+      globalLoader.classList.add("show");
+    }
+  } else {
+    globalLoader.classList.remove("show");
+    globalLoaderHideTimer = setTimeout(() => {
+      globalLoader.classList.add("hidden");
+      globalLoaderHideTimer = null;
+    }, 200);
+  }
+}
+
+function updateLoaderMessage(message) {
+  if (!loaderMessageEl) return;
+  loaderMessageEl.textContent = message;
+}
+
+function updateSyncIndicator(status) {
+  if (!syncStatusBadge || !syncStatusText) return;
+  if (!supabaseSyncEnabled) {
+    syncStatusBadge.classList.add("hidden");
+    return;
+  }
+  syncStatusBadge.classList.remove("hidden");
+  syncStatusBadge.classList.remove("online", "syncing");
+
+  let text = "Offline";
+  if (status.online && !status.syncing && status.pending === 0) {
+    syncStatusBadge.classList.add("online");
+    text = "Online";
+  } else if (status.syncing || status.pending > 0) {
+    syncStatusBadge.classList.add("syncing");
+    text = status.pending > 0 ? `Syncing (${status.pending})` : "Syncing…";
+  } else if (status.online) {
+    text = "Online";
+  }
+
+  syncStatusText.textContent = text;
+}
+
+function toggleButtonLoading(button, isLoading, loadingText = "Working...") {
+  if (!button) return;
+  if (!button.dataset.originalHtml) {
+    button.dataset.originalHtml = button.innerHTML;
+  }
+  if (isLoading) {
+    button.innerHTML = `<span class="inline-spinner" aria-hidden="true"></span><span>${loadingText}</span>`;
+    button.disabled = true;
+    button.classList.add("is-loading");
+    button.setAttribute("aria-busy", "true");
+  } else {
+    button.innerHTML = button.dataset.originalHtml || button.innerHTML;
+    button.disabled = false;
+    button.classList.remove("is-loading");
+    button.removeAttribute("aria-busy");
+  }
+}
+
 // ---------- App state ----------
 let html5QrScanner = null;
 let tickets = []; // array of { id, used, createdAt, notes } - loaded async
 let ticketMap = null; // Cache for fast ticket lookup during scanning
 let dbReady = false; // Track if database is initialized
+let isGenerating = false;
+let supabaseSyncEnabled = false;
+let supabaseSyncTimer = null;
+let supabaseStatus = { pending: 0, syncing: false, lastSyncAt: null, online: typeof navigator !== "undefined" ? navigator.onLine : true };
+let supabaseAnalytics = null;
+
+function isSupabaseReady() {
+  if (typeof window === "undefined") return false;
+  if (!window.SupabaseConfig || !window.SupabaseSync) return false;
+  try {
+    SupabaseConfig.ensureSupabaseConfig();
+    return true;
+  } catch (err) {
+    console.warn("[Supabase] Config incomplete:", err.message);
+    return false;
+  }
+}
+
+function setupSupabaseSync() {
+  if (!isSupabaseReady()) {
+    updateSyncIndicator({ pending: 0, syncing: false, online: navigator.onLine });
+    return;
+  }
+  try {
+    SupabaseSync.init();
+    supabaseSyncEnabled = true;
+    SupabaseSync.onStatusChange((status) => {
+      supabaseStatus = status;
+      debugLog("[Supabase] status", status);
+      updateSyncIndicator(status);
+    });
+    SupabaseSync.flushQueue();
+    syncFromSupabase();
+    if (supabaseSyncTimer) clearInterval(supabaseSyncTimer);
+    supabaseSyncTimer = setInterval(() => {
+      syncFromSupabase();
+      SupabaseSync.flushQueue();
+    }, 30000);
+  } catch (err) {
+    console.error("[Supabase] Failed to initialize sync:", err);
+    supabaseSyncEnabled = false;
+    updateSyncIndicator({ pending: 0, syncing: false, online: navigator.onLine });
+  }
+}
+
+async function syncFromSupabase() {
+  if (!supabaseSyncEnabled || !navigator.onLine) {
+    return;
+  }
+  try {
+    debugLog("[Supabase] Syncing from cloud…");
+    const remoteTickets = await SupabaseSync.fetchAllTickets();
+    await mergeRemoteTickets(remoteTickets);
+    const scans = await SupabaseSync.fetchTicketScansSince(SupabaseSync.getLastSyncAt());
+    await applyRemoteScans(scans);
+    SupabaseSync.setLastSyncAt(new Date().toISOString());
+  } catch (err) {
+    console.error("[Supabase] Sync error:", err);
+  }
+}
+
+async function mergeRemoteTickets(remoteTickets) {
+  if (!Array.isArray(remoteTickets) || remoteTickets.length === 0) {
+    supabaseAnalytics = remoteTickets ? { total: 0, active: 0, inactive: 0 } : supabaseAnalytics;
+    return;
+  }
+  const inactiveCount = remoteTickets.filter((ticket) => ticket && ticket.active === false).length;
+  supabaseAnalytics = {
+    total: remoteTickets.length,
+    active: remoteTickets.length - inactiveCount,
+    inactive: inactiveCount,
+  };
+  let changed = false;
+  remoteTickets.forEach((remote) => {
+    if (!remote || !remote.id) return;
+    const existing = ticketMap ? ticketMap.get(remote.id) : null;
+    if (!existing) {
+      tickets.push({
+        id: remote.id,
+        used: remote.active === false,
+        createdAt: remote.created_at || new Date().toISOString(),
+        usedAt: remote.active === false ? (remote.last_synced_at || remote.updated_at || remote.created_at || new Date().toISOString()) : null,
+        syncStatus: "synced",
+        lastSyncedAt: remote.last_synced_at || remote.updated_at || remote.created_at || new Date().toISOString(),
+        metadata: remote.metadata || {},
+        source: "cloud",
+      });
+      changed = true;
+    } else {
+      const prevUsed = existing.used;
+      existing.syncStatus = "synced";
+      existing.lastSyncedAt = remote.last_synced_at || remote.updated_at || remote.created_at || existing.lastSyncedAt || new Date().toISOString();
+      existing.metadata = remote.metadata || existing.metadata || {};
+      existing.source = existing.source || "cloud";
+      if (remote.active === false) {
+        existing.used = true;
+        existing.usedAt = existing.usedAt || existing.lastSyncedAt;
+      }
+      if (remote.active === true && existing.pendingAction !== "scan" && !existing.localHold) {
+        existing.used = false;
+        existing.usedAt = null;
+      }
+      if (existing.used !== prevUsed) {
+        changed = true;
+      }
+      existing.pendingAction = null;
+    }
+  });
+  if (changed) {
+    rebuildTicketMap();
+    await saveTickets(tickets);
+    await updateDashboard();
+  }
+}
+
+async function applyRemoteScans(scans) {
+  if (!Array.isArray(scans) || scans.length === 0) return;
+  let changed = false;
+  scans.forEach((scan) => {
+    if (!scan || !scan.ticket_id) return;
+    const ticket = ticketMap ? ticketMap.get(scan.ticket_id) : null;
+    if (!ticket) return;
+    if (scan.scan_action === "scan") {
+      if (!ticket.used) {
+        ticket.used = true;
+        ticket.usedAt = scan.scan_at || new Date().toISOString();
+        changed = true;
+      }
+    } else if (scan.scan_action === "reset") {
+      if (ticket.used) {
+        ticket.used = false;
+        ticket.usedAt = null;
+        changed = true;
+      }
+    }
+    ticket.syncStatus = "synced";
+    ticket.lastSyncedAt = scan.scan_at || ticket.lastSyncedAt || new Date().toISOString();
+  });
+  if (changed) {
+    rebuildTicketMap();
+    await saveTickets(tickets);
+    await updateDashboard();
+  }
+}
 
 // Initialize app - load tickets from database
 async function initApp() {
@@ -211,6 +454,7 @@ async function initApp() {
     await updateDashboard();
     dbReady = true;
     console.log("[DB] App initialized with", tickets.length, "tickets");
+    setupSupabaseSync();
   } catch (e) {
     console.error("[DB] Failed to initialize app:", e);
     tickets = [];
@@ -225,6 +469,26 @@ if (document.readyState === 'loading') {
 } else {
   initApp();
 }
+
+window.addEventListener('online', () => {
+  supabaseStatus.online = true;
+  updateSyncIndicator(supabaseStatus);
+});
+
+window.addEventListener('offline', () => {
+  supabaseStatus.online = false;
+  updateSyncIndicator(supabaseStatus);
+});
+
+window.addEventListener('beforeunload', () => {
+  if (supabaseSyncEnabled) {
+    try {
+      SupabaseSync.flushQueue();
+    } catch (err) {
+      // ignore
+    }
+  }
+});
 
 // Build ticket map for fast O(1) lookups
 function rebuildTicketMap() {
@@ -312,7 +576,7 @@ function renderGrid() {
         return;
       }
       const qrText = USE_URL_IN_QR ? `${TICKET_BASE_URL}${t.id}` : t.id;
-      console.log(`[QR] Generating QR for ticket ${t.id}:`, qrText); // Debug log
+      debugLog(`[QR] Generating QR for ticket ${t.id}:`, qrText);
       new QRCode(qrElement, { text: qrText, width: 100, height: 100, margin: 1 });
     } catch (e) {
       console.error("QRCode creation failed:", e);
@@ -366,8 +630,8 @@ function renderGrid() {
 async function updateDashboard() {
   tickets = await loadTickets();
   rebuildTicketMap(); // Rebuild map when tickets change
-  const total = tickets.length;
-  const used = tickets.filter(t => t.used).length;
+  const total = supabaseSyncEnabled && supabaseAnalytics ? supabaseAnalytics.total : tickets.length;
+  const used = supabaseSyncEnabled && supabaseAnalytics ? supabaseAnalytics.inactive : tickets.filter(t => t.used).length;
   totalTicketsEl.textContent = total;
   usedTicketsEl.textContent = used;
   unusedTicketsEl.textContent = total - used;
@@ -376,18 +640,99 @@ async function updateDashboard() {
 
 // ---------- Generate tickets ----------
 generateBtn.addEventListener("click", async () => {
-  const count = parseInt(ticketCountInput.value) || 0;
-  if (count < 1) return alert("Enter a valid amount");
-  const newTickets = [];
-  for (let i = 0; i < count; i++) {
-    const id = await uid();
-    newTickets.push({ id, used: false, createdAt: new Date().toISOString() });
+  if (isGenerating) {
+    return;
   }
-  tickets.push(...newTickets);
-  await saveTickets(tickets);
-  rebuildTicketMap();
-  await updateDashboard();
-  alert(count + " tickets generated. You can print the page or download CSV.");
+
+  const count = Number.parseInt(ticketCountInput.value, 10) || 0;
+  if (count < 1) {
+    alert("Enter a valid amount");
+    return;
+  }
+
+  isGenerating = true;
+
+  const loaderBaseMessage = count === 1 ? "Generating 1 ticket…" : `Generating ${count} tickets…`;
+  const buttonLoadingText = count === 1 ? "Generating…" : `Generating ${count}…`;
+  let successMessage = "";
+  let errorMessage = "";
+
+  toggleButtonLoading(generateBtn, true, buttonLoadingText);
+  setGlobalLoading(true, loaderBaseMessage);
+
+  try {
+    const newTickets = [];
+    const progressInterval = Math.max(1, Math.floor(count / 10));
+    const createdAt = new Date().toISOString();
+    const deviceId = supabaseSyncEnabled ? SupabaseSync.getDeviceId() : null;
+
+    for (let i = 0; i < count; i++) {
+      const id = await uid();
+      const ticket = {
+        id,
+        used: false,
+        createdAt,
+        usedAt: null,
+        syncStatus: supabaseSyncEnabled ? "pending" : "local",
+        lastSyncedAt: null,
+        pendingAction: supabaseSyncEnabled ? "create" : null,
+        metadata: { source: supabaseSyncEnabled ? "cloud" : "local" },
+        source: supabaseSyncEnabled ? "local" : "local",
+      };
+      newTickets.push(ticket);
+
+      if (supabaseSyncEnabled) {
+        SupabaseSync.enqueue({
+          type: "createTicket",
+          payload: {
+            id: ticket.id,
+            event_id: EVENT_ID,
+            active: true,
+            created_by: deviceId,
+            metadata: {
+              created_at_local: ticket.createdAt,
+              device_id: deviceId,
+            },
+          },
+        });
+      }
+
+      if ((i + 1) % progressInterval === 0 || i === count - 1) {
+        updateLoaderMessage(`Generating tickets… ${i + 1}/${count}`);
+      }
+    }
+
+    updateLoaderMessage("Finalizing tickets…");
+    tickets.push(...newTickets);
+    await saveTickets(tickets);
+    rebuildTicketMap();
+    await updateDashboard();
+
+    if (supabaseSyncEnabled) {
+      SupabaseSync.flushQueue();
+    }
+
+    successMessage = count === 1
+      ? "1 ticket generated. You can print the page or download exports."
+      : `${count} tickets generated. You can print the page or download exports.`;
+  } catch (error) {
+    console.error("[Generate] Failed to create tickets:", error);
+    errorMessage = error?.message
+      ? `Failed to generate tickets: ${error.message}`
+      : "Failed to generate tickets. Please try again.";
+  } finally {
+    toggleButtonLoading(generateBtn, false);
+    setGlobalLoading(false);
+    isGenerating = false;
+  }
+
+  if (successMessage) {
+    alert(successMessage);
+  }
+
+  if (errorMessage) {
+    alert(errorMessage);
+  }
 });
 
 // ---------- Export CSV/JSON ----------
@@ -1028,6 +1373,10 @@ function handleScannedCode(code) {
   // Mark as used immediately
   existing.used = true;
   existing.usedAt = new Date().toISOString();
+  if (supabaseSyncEnabled) {
+    existing.syncStatus = "pending";
+    existing.pendingAction = "scan";
+  }
   
   // Show success feedback
   showScanFeedback("success", "Ticket Accepted", ticketId, "Entry granted. Welcome!");
@@ -1040,6 +1389,33 @@ function handleScannedCode(code) {
     await saveTickets(tickets);
     await updateDashboard();
   }, 0);
+
+  if (supabaseSyncEnabled) {
+    SupabaseSync.enqueue({
+      type: "recordScan",
+      payload: {
+        ticket_id: ticketId,
+        event_id: EVENT_ID,
+        device_id: SupabaseSync.getDeviceId(),
+        scan_location: DEFAULT_SCAN_LOCATION,
+        scan_action: "scan",
+        payload: {
+          scanned_at_local: existing.usedAt,
+        },
+      },
+    });
+    SupabaseSync.enqueue({
+      type: "updateTicket",
+      payload: {
+        id: ticketId,
+        update: {
+          active: false,
+          last_synced_at: new Date().toISOString(),
+        },
+      },
+    });
+    SupabaseSync.flushQueue();
+  }
 
   scheduleScanCooldown(1200);
 }
@@ -1113,13 +1489,58 @@ function showScanFeedback(type, title, code, message) {
 
 // ---------- Reset ----------
 resetBtn.addEventListener("click", async () => {
-  if (!confirm("Erase all tickets and reset dashboard? This cannot be undone.")) return;
-  tickets = [];
-  ticketCounter = 0; // Reset counter when resetting tickets
+  if (!tickets.length) {
+    alert("No tickets to reset.");
+    return;
+  }
+  if (!confirm("Reset all tickets to unused? This cannot be undone.")) return;
+
+  const now = new Date().toISOString();
+  const deviceId = supabaseSyncEnabled ? SupabaseSync.getDeviceId() : null;
+  const ticketsToReset = tickets.filter((ticket) => ticket.used);
+
+  if (ticketsToReset.length === 0) {
+    alert("All tickets are already unused.");
+    return;
+  }
+
+  tickets.forEach((ticket) => {
+    ticket.used = false;
+    ticket.usedAt = null;
+    if (supabaseSyncEnabled) {
+      ticket.syncStatus = "pending";
+      ticket.pendingAction = "reset";
+    }
+  });
+
   await saveTickets(tickets);
   rebuildTicketMap();
   await updateDashboard();
-  alert("Reset complete.");
+
+  if (supabaseSyncEnabled) {
+    ticketsToReset.forEach((ticket) => {
+      SupabaseSync.enqueue({
+        type: "recordScan",
+        payload: {
+          ticket_id: ticket.id,
+          event_id: EVENT_ID,
+          device_id: deviceId,
+          scan_location: DEFAULT_SCAN_LOCATION,
+          scan_action: "reset",
+          payload: {
+            reset_at_local: now,
+          },
+        },
+      });
+      SupabaseSync.enqueue({
+        type: "resetTicket",
+        payload: { id: ticket.id },
+      });
+    });
+    SupabaseSync.flushQueue();
+  }
+
+  alert("All tickets reset to unused.");
 });
 
 // Initialize counter and ticket map based on existing tickets

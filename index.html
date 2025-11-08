@@ -13,12 +13,17 @@
   <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png" />
   <link rel="apple-touch-icon" sizes="192x192" href="icon-192.png" />
 
+  <script defer src="supabase-config.js"></script>
+  <script defer src="supabase-sync.js"></script>
+
   <!-- Register service worker -->
   <script>
     if ("serviceWorker" in navigator) {
+      const APP_VERSION = window.APP_VERSION || "2025-11-08-1";
+      window.APP_VERSION = APP_VERSION;
       window.addEventListener("load", () => {
         // Register service worker
-        navigator.serviceWorker.register("./service-worker.js", { scope: "./" })
+        navigator.serviceWorker.register(`./service-worker.js?v=${APP_VERSION}`, { scope: "./" })
           .then(registration => {
             console.log("[SW] Service Worker registered successfully:", registration.scope);
             
@@ -257,7 +262,18 @@
     <button id="headerInstallBtn" class="header-install-btn" style="display: none;">
       <span>📱</span> Install App
     </button>
+    <div id="syncStatusBadge" class="sync-status hidden" role="status" aria-live="polite">
+      <span class="sync-dot"></span>
+      <span id="syncStatusText">Offline</span>
+    </div>
   </header>
+
+  <div id="globalLoader" class="global-loader hidden" role="status" aria-live="assertive">
+    <div class="loader-content">
+      <div class="spinner" aria-hidden="true"></div>
+      <p id="loaderMessage">Working...</p>
+    </div>
+  </div>
 
   <!-- Tab Navigation -->
   <nav class="tabs">

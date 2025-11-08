@@ -154,6 +154,17 @@ When distributing this app:
 - No data sent to external servers
 - Works completely offline after first load
 
+## ☁️ Supabase Cloud Sync (Optional)
+
+To enable multi-device synchronization:
+
+1. Run `supabase-schema.sql` in the Supabase SQL editor to create the `tickets` and `ticket_scans` tables.
+2. Open `supabase-config.js` and replace the placeholders with your Supabase project URL and service role key.
+3. Deploy the updated pack so every device shares the same configuration.
+4. Remember: storing a service role key client-side is a temporary measure until authentication is added.
+
+After configuration, the app will queue offline actions locally and sync them with Supabase when connectivity is restored.
+
 ## 📝 License
 
 This is a complete, self-contained PWA application.
