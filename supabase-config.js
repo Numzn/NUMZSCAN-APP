@@ -1,11 +1,10 @@
 // Supabase configuration for QR Ticket System
-// NOTE: Service role key is stored client-side temporarily until auth is implemented.
-// Replace placeholders with real values before running in production.
+// NOTE: Service role key is temporarily stored client-side until auth is added.
 
 (function initSupabaseConfig() {
   const config = {
     url: "https://db.gbwkrodmicsiashdigad.supabase.co",
-    serviceKey: "<SUPABASE_SERVICE_ROLE_KEY>",
+    serviceKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdid2tyb2RtaWNzaWFzaGRpZ2FkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MjU4NDE5OCwiZXhwIjoyMDc4MTYwMTk4fQ.edeD1OjrqS3R7kPiiZ_2hc3rkoQ4nzlgWiBJxjR0_kk",
     tables: {
       tickets: "tickets",
       ticketScans: "ticket_scans",

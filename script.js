@@ -196,11 +196,17 @@ const globalLoader = document.getElementById("globalLoader");
 const loaderMessageEl = document.getElementById("loaderMessage");
 const syncStatusBadge = document.getElementById("syncStatusBadge");
 const syncStatusText = document.getElementById("syncStatusText");
+const cloudSyncStatusLabel = document.getElementById("cloudSyncStatusLabel");
+const cloudSyncDeviceIdEl = document.getElementById("cloudSyncDeviceId");
+const cloudSyncLastSyncEl = document.getElementById("cloudSyncLastSync");
+const cloudSyncPendingEl = document.getElementById("cloudSyncPending");
 const generateBtn = document.getElementById("generateBtn");
 const downloadSheetBtn = document.getElementById("downloadSheetBtn");
 const exportBtn = document.getElementById("exportBtn");
 const importBtn = document.getElementById("importBtn");
 const importFile = document.getElementById("importFile");
+const importCsvBtn = document.getElementById("importCsvBtn");
+const importCsvFile = document.getElementById("importCsvFile");
 const exportSettingsBtn = document.getElementById("exportSettingsBtn");
 const exportJSONSettingsBtn = document.getElementById("exportJSONSettingsBtn");
 const importSettingsBtn = document.getElementById("importSettingsBtn");
@@ -252,10 +258,20 @@ function updateLoaderMessage(message) {
   loaderMessageEl.textContent = message;
 }
 
+function formatTimestamp(ts) {
+  if (!ts) return "Never";
+  try {
+    return new Date(ts).toLocaleString();
+  } catch (err) {
+    return ts;
+  }
+}
+
 function updateSyncIndicator(status) {
   if (!syncStatusBadge || !syncStatusText) return;
   if (!supabaseSyncEnabled) {
     syncStatusBadge.classList.add("hidden");
+    updateCloudSyncDetails({ enabled: false });
     return;
   }
   syncStatusBadge.classList.remove("hidden");
@@ -273,6 +289,33 @@ function updateSyncIndicator(status) {
   }
 
   syncStatusText.textContent = text;
+  updateCloudSyncDetails({ enabled: true, status });
+}
+
+function updateCloudSyncDetails({ enabled, status }) {
+  if (!cloudSyncStatusLabel || !cloudSyncDeviceIdEl || !cloudSyncLastSyncEl || !cloudSyncPendingEl) return;
+
+  if (!enabled) {
+    cloudSyncStatusLabel.textContent = "Disabled";
+    cloudSyncDeviceIdEl.textContent = "-";
+    cloudSyncLastSyncEl.textContent = "Never";
+    cloudSyncPendingEl.textContent = "0";
+    return;
+  }
+
+  const { pending = 0, syncing = false, online = navigator.onLine, lastSyncAt = null } = status || {};
+  let text = "Offline";
+  if (online && syncing) {
+    text = pending > 0 ? `Syncing (${pending})` : "Syncing…";
+  } else if (online) {
+    text = pending > 0 ? `Pending (${pending})` : "Online";
+  }
+
+  cloudSyncStatusLabel.textContent = text;
+  cloudSyncDeviceIdEl.textContent = (SupabaseSync && SupabaseSync.getDeviceId) ? SupabaseSync.getDeviceId() : "-";
+  const lastSync = lastSyncAt || (SupabaseSync && SupabaseSync.getLastSyncAt ? SupabaseSync.getLastSyncAt() : null);
+  cloudSyncLastSyncEl.textContent = formatTimestamp(lastSync);
+  cloudSyncPendingEl.textContent = pending.toString();
 }
 
 function toggleButtonLoading(button, isLoading, loadingText = "Working...") {
@@ -773,6 +816,184 @@ async function exportJSON() {
   a.click();
   URL.revokeObjectURL(url);
   return data;
+}
+
+// ---------- Import CSV (cloud sync) ----------
+if (importCsvBtn && importCsvFile) {
+  importCsvBtn.addEventListener("click", () => importCsvFile.click());
+  importCsvFile.addEventListener("change", handleCsvImport);
+}
+
+async function handleCsvImport(event) {
+  const file = event.target.files[0];
+  event.target.value = "";
+  if (!file) return;
+
+  toggleButtonLoading(importCsvBtn, true, "Importing…");
+  setGlobalLoading(true, "Importing tickets from CSV…");
+
+  try {
+    const rawText = await file.text();
+    const records = parseTicketsCsv(rawText);
+    if (records.length === 0) {
+      alert("No rows found in CSV file.");
+      return;
+    }
+
+    if (!ticketMap) rebuildTicketMap();
+    const existingIds = new Set(tickets.map((t) => t.id));
+    const newTickets = [];
+    const skipped = [];
+    const now = new Date().toISOString();
+    const deviceId = supabaseSyncEnabled && SupabaseSync.getDeviceId ? SupabaseSync.getDeviceId() : null;
+
+    records.forEach((record, index) => {
+      const rawId = (record.id || record.ticket_id || record.code || "").trim();
+      if (!rawId) {
+        skipped.push(`Row ${index + 1}: missing ticket id`);
+        return;
+      }
+      if (existingIds.has(rawId) || newTickets.find((t) => t.id === rawId)) {
+        skipped.push(`${rawId} (duplicate)`);
+        return;
+      }
+
+      const isActive = parseBoolean(record.active, true);
+      const createdAt = record.created_at ? formatTimestampForStorage(record.created_at) : now;
+      const usedAt = !isActive && record.used_at ? formatTimestampForStorage(record.used_at) : (!isActive ? createdAt : null);
+      const metadata = {};
+      if (record.created_by) metadata.created_by = record.created_by;
+      if (record.notes) metadata.notes = record.notes;
+
+      const ticket = {
+        id: rawId,
+        used: !isActive,
+        createdAt,
+        usedAt,
+        syncStatus: supabaseSyncEnabled ? "pending" : "local",
+        lastSyncedAt: null,
+        pendingAction: supabaseSyncEnabled ? "create" : null,
+        metadata,
+        source: "csv-import",
+      };
+
+      newTickets.push(ticket);
+      existingIds.add(rawId);
+    });
+
+    if (newTickets.length === 0) {
+      const note = skipped.length ? ` Skipped: ${skipped.length}` : "";
+      alert(`No new tickets imported.${note}`);
+      return;
+    }
+
+    updateLoaderMessage("Saving imported tickets…");
+    tickets.push(...newTickets);
+    await saveTickets(tickets);
+    rebuildTicketMap();
+    await updateDashboard();
+
+    if (supabaseSyncEnabled && deviceId) {
+      newTickets.forEach((ticket) => {
+        SupabaseSync.enqueue({
+          type: "createTicket",
+          payload: {
+            id: ticket.id,
+            event_id: EVENT_ID,
+            active: !ticket.used,
+            created_by: deviceId,
+            metadata: {
+              ...ticket.metadata,
+              imported_at: now,
+              imported_device_id: deviceId,
+              source: "csv",
+            },
+          },
+        });
+        if (ticket.used) {
+          SupabaseSync.enqueue({
+            type: "updateTicket",
+            payload: {
+              id: ticket.id,
+              update: { active: false, last_synced_at: now },
+            },
+          });
+        }
+      });
+      SupabaseSync.flushQueue();
+    }
+
+    const skippedMsg = skipped.length ? `\nSkipped ${skipped.length} entries.` : "";
+    alert(`Imported ${newTickets.length} tickets.${skippedMsg}`);
+  } catch (error) {
+    console.error("[Import CSV] Failed:", error);
+    alert(error?.message ? `CSV import failed: ${error.message}` : "Failed to import CSV file.");
+  } finally {
+    toggleButtonLoading(importCsvBtn, false);
+    setGlobalLoading(false);
+  }
+}
+
+function parseBoolean(value, defaultValue = true) {
+  if (value === undefined || value === null || value === "") return defaultValue;
+  const normalized = String(value).trim().toLowerCase();
+  if (["true", "1", "yes", "y"].includes(normalized)) return true;
+  if (["false", "0", "no", "n"].includes(normalized)) return false;
+  return defaultValue;
+}
+
+function formatTimestampForStorage(value) {
+  try {
+    return new Date(value).toISOString();
+  } catch (err) {
+    return new Date().toISOString();
+  }
+}
+
+function parseTicketsCsv(text) {
+  if (!text) return [];
+  const rows = text.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+  if (rows.length === 0) return [];
+
+  const delimiter = detectCsvDelimiter(rows[0]);
+  let headers = rows[0].split(delimiter).map((h) => cleanCsvValue(h).toLowerCase());
+  let dataRows = rows.slice(1);
+
+  if (headers.length === 1 && headers[0] !== "id") {
+    headers = ["id"];
+    dataRows = rows;
+  }
+
+  return dataRows
+    .map((row) => {
+      const columns = row.split(delimiter).map((value) => cleanCsvValue(value));
+      if (columns.every((value) => !value)) return null;
+      const record = {};
+      columns.forEach((value, idx) => {
+        const key = headers[idx] || `col_${idx}`;
+        record[key] = value;
+      });
+      if (!record.id && columns[0]) {
+        record.id = columns[0];
+      }
+      return record;
+    })
+    .filter(Boolean);
+}
+
+function detectCsvDelimiter(headerLine) {
+  if (headerLine.includes(",")) return ",";
+  if (headerLine.includes(";")) return ";";
+  if (headerLine.includes("\t")) return "\t";
+  return ",";
+}
+
+function cleanCsvValue(value) {
+  const trimmed = value.trim();
+  if ((trimmed.startsWith('"') && trimmed.endsWith('"')) || (trimmed.startsWith("'") && trimmed.endsWith("'"))) {
+    return trimmed.slice(1, -1).trim();
+  }
+  return trimmed;
 }
 
 // ---------- Import JSON (backup restore / sync) ----------

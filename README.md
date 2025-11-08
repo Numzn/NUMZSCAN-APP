@@ -85,6 +85,7 @@ For distributing to users who may not have a web server:
 - ✅ **Scan & Validate** - Use device camera to scan and validate tickets
 - ✅ **Track Status** - Dashboard shows used/unused ticket counts
 - ✅ **Export/Import** - CSV export and JSON import for backup
+- ✅ **Cloud CSV Import** - Import existing ticket IDs and sync through Supabase
 - ✅ **Fully Offline** - Works without internet after first load
 - ✅ **PWA Installable** - Install as native app on mobile/desktop
 
@@ -164,6 +165,13 @@ To enable multi-device synchronization:
 4. Remember: storing a service role key client-side is a temporary measure until authentication is added.
 
 After configuration, the app will queue offline actions locally and sync them with Supabase when connectivity is restored.
+
+### CSV Import (Cloud Sync)
+
+- Prepare a CSV file with a header row; only `id` is required. Optional columns: `active`, `created_at`, `used_at`, `created_by`, `notes`.
+- In the Generator tab, click **Import CSV (Cloud)** and select the file.
+- New tickets are saved locally and queued to Supabase; duplicates are skipped automatically.
+- Imports work offline—the queue flushes once the device reconnects.
 
 ## 📝 License
 

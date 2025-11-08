@@ -310,7 +310,11 @@
             <button id="importBtn" class="action-btn">
               <span>📥</span> Import JSON (Sync)
             </button>
+            <button id="importCsvBtn" class="action-btn">
+              <span>📥</span> Import CSV (Cloud)
+            </button>
             <input id="importFile" type="file" accept="application/json" class="hidden" aria-label="Import tickets JSON file" />
+            <input id="importCsvFile" type="file" accept=".csv,text/csv" class="hidden" aria-label="Import tickets CSV file" />
           </div>
         </div>
         </div>
@@ -361,6 +365,28 @@
           <div class="stat"><div class="stat-value" id="unusedTickets">0</div><div class="stat-label">Unused</div></div>
         </div>
       </div>
+      <div class="card" id="cloudSyncCard" style="display: none;">
+        <h2>Cloud Sync</h2>
+        <div class="sync-summary">
+          <div class="sync-line">
+            <span>Status:</span>
+            <strong id="cloudSyncStatusText">Offline</strong>
+          </div>
+          <div class="sync-line">
+            <span>Pending actions:</span>
+            <strong id="cloudSyncPending">0</strong>
+          </div>
+          <div class="sync-line">
+            <span>Last sync:</span>
+            <strong id="cloudSyncLastSync">Never</strong>
+          </div>
+          <div class="sync-line">
+            <span>Cloud totals:</span>
+            <strong id="cloudSyncTotals">--</strong>
+          </div>
+        </div>
+        <p class="sync-note" id="cloudSyncNote">Supabase connection active.</p>
+      </div>
 
       <div class="card">
         <h2>Settings</h2>
@@ -388,6 +414,14 @@
                 </p>
               </div>
             </div>
+          </div>
+          <div class="setting-item">
+            <label>Cloud Sync</label>
+            <p class="setting-desc">Keeps tickets in sync across devices using Supabase.</p>
+            <p class="setting-desc">Status: <span id="cloudSyncStatusLabel">Disabled</span></p>
+            <p class="setting-desc">Device ID: <code id="cloudSyncDeviceId">-</code></p>
+            <p class="setting-desc">Last Sync: <span id="cloudSyncLastSync">Never</span></p>
+            <p class="setting-desc">Pending Queue: <span id="cloudSyncPending">0</span></p>
           </div>
           <div class="setting-item">
             <label>Reset All Tickets</label>
