@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>LHG Bigoca Overlay</title>
+    <style>
+      :root {
+        color-scheme: dark;
+      }
+      body {
+        margin: 0;
+        font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+        background: rgba(15, 23, 42, 0.65);
+        color: #fff;
+        overflow: hidden;
+      }
+      .overlay {
+        display: grid;
+        grid-template-rows: auto auto 1fr;
+        min-height: 100vh;
+        padding: 24px;
+        gap: 20px;
+      }
+      .overlay-header h1 {
+        margin: 0;
+        font-size: clamp(1.5rem, 4vw, 2.4rem);
+        letter-spacing: 1px;
+      }
+      .overlay-header p {
+        margin: 6px 0 0;
+        color: rgba(255, 255, 255, 0.7);
+      }
+      .overlay-progress {
+        background: linear-gradient(135deg, rgba(46, 125, 50, 0.65), rgba(212, 175, 55, 0.6));
+        border-radius: 24px;
+        padding: 18px 24px;
+        box-shadow: 0 18px 45px rgba(0, 0, 0, 0.35);
+      }
+      .overlay-amounts {
+        display: flex;
+        align-items: baseline;
+        gap: 12px;
+        font-size: clamp(1.4rem, 5vw, 2.8rem);
+        font-weight: 700;
+      }
+      .overlay-divider {
+        opacity: 0.5;
+      }
+      .overlay-bar {
+        margin-top: 14px;
+        height: 18px;
+        border-radius: 12px;
+        overflow: hidden;
+        background: rgba(255, 255, 255, 0.12);
+      }
+      .overlay-fill {
+        width: 0%;
+        height: 100%;
+        background: linear-gradient(135deg, #2e7d32, #d4af37, #e65100);
+        transition: width 0.8s ease;
+      }
+      .overlay-verse {
+        margin-top: 10px;
+        font-size: 0.95rem;
+        color: rgba(255, 255, 255, 0.85);
+      }
+      .overlay-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        gap: 16px;
+      }
+      .ticker {
+        display: flex;
+        flex: 1;
+        gap: 16px;
+        font-size: 1.05rem;
+        color: rgba(255, 255, 255, 0.85);
+        animation: tickerScroll 20s linear infinite;
+      }
+      .ticker.paused {
+        animation-play-state: paused;
+      }
+      .ticker-item {
+        white-space: nowrap;
+      }
+      .overlay-note {
+        font-size: 0.9rem;
+        color: rgba(255, 255, 255, 0.6);
+        text-align: right;
+      }
+      @keyframes tickerScroll {
+        0% {
+          transform: translateX(0);
+        }
+        100% {
+          transform: translateX(-50%);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="overlay">
+      <header class="overlay-header">
+        <h1>Matebeto Sunday 2025</h1>
+        <p>“Every brick represents a family's faith. Twalipoka!”</p>
+      </header>
+
+      <section class="overlay-progress" aria-label="fundraising progress">
+        <div class="overlay-amounts">
+          <span id="overlayCurrent">K0</span>
+          <span class="overlay-divider">/</span>
+          <span id="overlayTarget">K0</span>
+        </div>
+        <div class="overlay-bar">
+          <div id="overlayFill" class="overlay-fill"></div>
+        </div>
+        <p id="overlayVerse" class="overlay-verse"></p>
+      </section>
+
+      <footer class="overlay-footer">
+        <div id="overlayTicker" class="ticker"></div>
+        <div class="overlay-note">
+          <div id="overlayMilestone">Awaiting first milestone…</div>
+          <div id="overlayDeviceStatus"></div>
+        </div>
+      </footer>
+    </div>
+
+    <script type="module" src="obs-overlay.js"></script>
+  </body>
+</html>
+
+

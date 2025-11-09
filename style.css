@@ -119,6 +119,17 @@ h1 {
   box-shadow: 0 0 0 0 rgba(250, 204, 21, 0.6);
 }
 
+.sync-status.manual-mode {
+  background: rgba(107, 114, 128, 0.18);
+  color: var(--muted, #6b7280);
+}
+
+.sync-status.manual-mode .sync-dot {
+  background: var(--muted, #6b7280);
+  box-shadow: none;
+  animation: none;
+}
+
 .sync-summary {
   display: flex;
   flex-direction: column;
@@ -141,6 +152,25 @@ h1 {
   font-size: 0.85rem;
   color: #6b7280;
   margin-top: 8px;
+}
+
+.sync-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.sync-actions .action-btn {
+  justify-content: center;
+}
+
+.sync-actions .action-btn span {
+  font-size: 1rem;
+}
+.sync-actions p {
+  margin: 0;
+  line-height: 1.45;
 }
 
 @keyframes pulse {
@@ -397,6 +427,22 @@ button:disabled {
   flex-wrap: wrap;
 }
 
+.generation-notice {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--danger);
+  background: rgba(220, 53, 69, 0.12);
+  border: 1px solid rgba(220, 53, 69, 0.3);
+  padding: 10px 14px;
+  border-radius: 10px;
+  display: none;
+  flex: 1 1 100%;
+}
+
+.generation-notice:not(.hidden) {
+  display: block;
+}
+
 .input-group {
   display: flex;
   flex-direction: column;
@@ -421,6 +467,11 @@ button:disabled {
   border-radius: 8px;
   cursor: pointer;
   transition: background 0.2s;
+}
+
+.primary-btn.locked {
+  background: rgba(0, 123, 255, 0.35);
+  cursor: not-allowed;
 }
 
 .primary-btn:hover {

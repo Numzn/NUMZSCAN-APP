@@ -300,6 +300,9 @@
               <input id="ticketCount" type="number" value="20" min="1" max="500" />
             </div>
             <button id="generateBtn" class="primary-btn">Generate Tickets</button>
+            <p id="generationLockNotice" class="generation-notice hidden">
+              CSV import in effect. Ticket generation is disabled across devices to prevent duplicates.
+            </p>
           </div>
         
         <div class="action-buttons">
@@ -391,7 +394,15 @@
             <strong id="cloudSyncTotals">--</strong>
           </div>
         </div>
-        <p class="sync-note" id="cloudSyncNote">Supabase connection active.</p>
+        <div class="sync-actions">
+          <button id="manualSyncBtn" class="action-btn">
+            <span>☁️</span> Sync to Cloud (Manual)
+          </button>
+          <p class="sync-note" id="cloudSyncNote">
+            Manual sync keeps scanning lightning-fast. Press when you need to upload changes to other devices.
+          </p>
+          <p class="sync-note" id="cloudSyncMode">Mode: Offline-first (Manual)</p>
+        </div>
       </div>
 
       <div class="card">
@@ -501,30 +512,25 @@
         retryCount++;
         console.log(`Checking for QRCode (attempt ${retryCount}/${maxRetries})...`, typeof QRCode);
         if (typeof QRCode !== 'undefined') {
-          console.log("QRCode found! Loading script.js");
-          // After libs are loaded and available, load main app
-          const s = document.createElement("script");
-          s.src = "script.js";
-          document.body.appendChild(s);
+          console.log("QRCode found! Loading main application module");
+          import(`./main.js?v=${window.APP_VERSION || "dev"}`)
+            .catch(err => console.error("Failed to load main module", err));
         } else if (retryCount < maxRetries) {
           // Retry after a short delay
           setTimeout(waitForQRCode, 50);
         } else {
           // Library failed to load - show error but still load script (will use CDN fallback)
-          console.error("QRCode library not found after loading. Loading script.js anyway - it will retry.");
-          const s = document.createElement("script");
-          s.src = "script.js";
-          document.body.appendChild(s);
+          console.error("QRCode library not found after loading. Loading main module anyway - it will retry.");
+          import(`./main.js?v=${window.APP_VERSION || "dev"}`)
+            .catch(err => console.error("Failed to load main module", err));
         }
       };
       // Give it a moment for the script to execute
       setTimeout(waitForQRCode, 100);
     }).catch(err => {
       console.error("Failed to load QR libraries", err);
-      // Still try to load script.js - it will handle missing library gracefully
-      const s = document.createElement("script");
-      s.src = "script.js";
-      document.body.appendChild(s);
+      import(`./main.js?v=${window.APP_VERSION || "dev"}`)
+        .catch(loadErr => console.error("Failed to load main module", loadErr));
     });
   </script>
 </body>

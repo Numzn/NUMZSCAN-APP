@@ -59,6 +59,28 @@ body {
   gap: 16px;
 }
 
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+
+.hero-note {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.secondary-btn {
+  background: rgba(46, 125, 50, 0.12);
+  color: var(--brand-green);
+  box-shadow: none;
+}
+
+.secondary-btn:hover {
+  box-shadow: 0 8px 20px rgba(46, 125, 50, 0.15);
+}
+
 .progress-stats {
   display: flex;
   gap: 16px;
@@ -139,11 +161,76 @@ body {
   box-shadow: var(--shadow);
   border-left: 6px solid transparent;
   transition: var(--transition);
+  position: relative;
+  overflow: hidden;
 }
 
 .milestone-card.active {
   border-left-color: var(--brand-green);
   transform: translateY(-4px);
+}
+
+.milestone-card .milestone-visual {
+  position: relative;
+  overflow: hidden;
+}
+
+.milestone-card .milestone-visual::before,
+.milestone-card .milestone-visual::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.milestone-card.stage-seed .milestone-visual {
+  background: linear-gradient(180deg, rgba(139, 94, 60, 0.25), rgba(46, 125, 50, 0.15));
+}
+
+.milestone-card.stage-seed.is-complete .milestone-visual::before {
+  opacity: 1;
+  background-image: radial-gradient(rgba(212, 175, 55, 0.8) 2px, transparent 3px);
+  background-size: 20px 20px;
+  animation: seeds-fall 6s linear infinite;
+}
+
+.milestone-card.stage-land .milestone-visual {
+  background: linear-gradient(90deg, rgba(212, 175, 55, 0.15), rgba(46, 125, 50, 0.2));
+}
+
+.milestone-card.stage-land.is-complete .milestone-visual::before {
+  opacity: 1;
+  background-image: repeating-linear-gradient(
+    90deg,
+    rgba(139, 94, 60, 0.6),
+    rgba(139, 94, 60, 0.6) 3px,
+    transparent 3px,
+    transparent 15px
+  );
+  animation: survey-pulse 3s ease-in-out infinite;
+}
+
+.milestone-card.stage-build .milestone-visual {
+  background: linear-gradient(135deg, rgba(139, 94, 60, 0.18), rgba(46, 125, 50, 0.12));
+}
+
+.milestone-card.stage-build.is-complete .milestone-visual::before {
+  opacity: 1;
+  background-image: radial-gradient(rgba(139, 94, 60, 0.55) 4px, transparent 6px);
+  background-size: 28px 28px;
+  animation: bricks-rise 4.5s ease-in-out infinite;
+}
+
+.milestone-card.stage-home .milestone-visual {
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.18), rgba(46, 125, 50, 0.18));
+}
+
+.milestone-card.stage-home.is-complete .milestone-visual::before {
+  opacity: 1;
+  background: radial-gradient(circle at center, rgba(212, 175, 55, 0.7), transparent 70%);
+  animation: glory-glow 5s ease-in-out infinite;
 }
 
 .milestone-card h2 {
@@ -222,6 +309,18 @@ button {
 button:hover {
   transform: translateY(-2px);
   box-shadow: 0 12px 28px rgba(46, 125, 50, 0.35);
+}
+
+.button-spinner {
+  display: inline-block;
+  vertical-align: middle;
+  width: 16px;
+  height: 16px;
+  margin-right: 6px;
+  border: 3px solid rgba(46, 125, 50, 0.25);
+  border-top-color: var(--brand-green);
+  border-radius: 50%;
+  animation: loader-spin 0.8s linear infinite;
 }
 
 .auto-sync {
@@ -378,16 +477,86 @@ button:hover {
   font-size: clamp(2rem, 6vw, 3.5rem);
   color: #fff;
   text-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+  background: rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(3px);
   z-index: 999;
+  transition: opacity 0.3s ease;
 }
 
 .celebration.hidden {
   display: none;
 }
 
+.fundraising-loader {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(4px);
+  z-index: 1500;
+}
+
+.fundraising-loader.hidden {
+  display: none;
+}
+
+.fundraising-loader .loader-content {
+  background: rgba(255, 255, 255, 0.95);
+  padding: 26px 30px;
+  border-radius: 18px;
+  box-shadow: 0 20px 50px rgba(31, 41, 55, 0.3);
+  text-align: center;
+  min-width: 240px;
+}
+
+.fundraising-loader .loader-spinner {
+  width: 42px;
+  height: 42px;
+  margin: 0 auto 12px;
+  border: 4px solid rgba(46, 125, 50, 0.2);
+  border-top-color: var(--brand-green);
+  border-radius: 50%;
+  animation: loader-spin 0.9s linear infinite;
+}
+
+.fundraising-loader p {
+  margin: 0;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+@keyframes loader-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 @keyframes glow {
   0%, 100% { box-shadow: 0 0 0 rgba(46, 125, 50, 0); }
   50% { box-shadow: 0 0 25px rgba(212, 175, 55, 0.5); }
+}
+
+@keyframes seeds-fall {
+  0% { background-position: 0 -40px; }
+  100% { background-position: 0 40px; }
+}
+
+@keyframes survey-pulse {
+  0%, 100% { opacity: 0.35; }
+  50% { opacity: 0.8; }
+}
+
+@keyframes bricks-rise {
+  0% { background-position: 0 40px; opacity: 0.5; }
+  50% { background-position: 0 20px; opacity: 1; }
+  100% { background-position: 0 0; opacity: 0.5; }
+}
+
+@keyframes glory-glow {
+  0%, 100% { transform: scale(0.9); opacity: 0.6; }
+  50% { transform: scale(1.1); opacity: 1; }
 }
 
 @media (min-width: 720px) {

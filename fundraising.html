@@ -36,6 +36,10 @@
           </div>
           <p id="progressVerse" class="progress-verse"></p>
         </div>
+        <div class="hero-actions">
+          <button id="openOverlayBtn" type="button" class="secondary-btn">Open OBS Overlay</button>
+          <span class="hero-note">Use this view for streaming to celebrate every contribution.</span>
+        </div>
       </header>
 
       <main class="content">
@@ -122,7 +126,14 @@
 
     <div id="celebrationContainer" class="celebration hidden"></div>
 
-    <script src="fundraising.js" type="module"></script>
+    <div id="fundraisingLoader" class="fundraising-loader hidden" role="status" aria-live="polite">
+      <div class="loader-content">
+        <div class="loader-spinner"></div>
+        <p id="fundraisingLoaderText">Working…</p>
+      </div>
+    </div>
+
+    <script type="module" src="fundraising-main.js"></script>
   </body>
 </html>
 
