@@ -1061,27 +1061,45 @@ async function initializeCounter() {
 }
 
 // ---------- Tab Navigation ----------
-const tabButtons = document.querySelectorAll(".tab-btn");
-const tabContents = document.querySelectorAll(".tab-content");
+const tabButtons = Array.from(document.querySelectorAll(".tab-btn"));
+const tabContents = Array.from(document.querySelectorAll(".tab-content"));
 
-tabButtons.forEach(btn => {
-  btn.addEventListener("click", () => {
-    const targetTab = btn.getAttribute("data-tab");
-    
-    // Remove active class from all tabs and buttons
-    tabButtons.forEach(b => b.classList.remove("active"));
-    tabContents.forEach(c => c.classList.remove("active"));
-    
-    // Add active class to clicked tab
-    btn.classList.add("active");
-    document.getElementById(targetTab).classList.add("active");
-    
-    // If switching to scanner tab, try to restart camera if it was running
-    if (targetTab === "scanner" && html5QrScanner) {
-      // Camera already running, just show the tab
-    }
+if (tabButtons.length && tabContents.length) {
+  function activateTab(targetId) {
+    tabButtons.forEach((button) => {
+      const isActive = button.dataset.tab === targetId;
+      button.classList.toggle("active", isActive);
+      button.setAttribute("aria-selected", isActive ? "true" : "false");
+    });
+
+    tabContents.forEach((content) => {
+      const isActive = content.id === targetId;
+      content.classList.toggle("active", isActive);
+      content.classList.toggle("hidden", !isActive);
+      content.setAttribute("aria-hidden", isActive ? "false" : "true");
+    });
+  }
+
+  tabButtons.forEach((button) => {
+    button.addEventListener("click", (event) => {
+      event.preventDefault();
+      const targetId = button.dataset.tab;
+      if (!targetId) return;
+      activateTab(targetId);
+
+      if (targetId === "scanner" && html5QrScanner) {
+        // Scanner already running; nothing extra required here.
+      }
+    });
   });
-});
+
+  const initiallyActive = tabButtons.find((button) => button.classList.contains("active"));
+  const fallbackInitial = tabButtons[0];
+  const targetInitial = initiallyActive?.dataset.tab || fallbackInitial?.dataset.tab;
+  if (targetInitial) {
+    activateTab(targetInitial);
+  }
+}
 
 // Export JSON button
 if (exportJSONBtn) {
