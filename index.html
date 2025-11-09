@@ -13,36 +13,26 @@
   <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png" />
   <link rel="apple-touch-icon" sizes="192x192" href="icon-192.png" />
 
-  <script defer src="supabase-config.js"></script>
-  <script defer src="supabase-sync.js"></script>
-
   <!-- Register service worker -->
   <script>
     if ("serviceWorker" in navigator) {
-      const APP_VERSION = window.APP_VERSION || "2025-11-08-1";
-      window.APP_VERSION = APP_VERSION;
       window.addEventListener("load", () => {
-        // Register service worker
-        navigator.serviceWorker.register(`./service-worker.js?v=${APP_VERSION}`, { scope: "./" })
+        navigator.serviceWorker
+          .register("./service-worker.js", { scope: "./" })
           .then(registration => {
             console.log("[SW] Service Worker registered successfully:", registration.scope);
-            
-            // Force update if service worker is already installed
+
             if (registration.waiting) {
               console.log("[SW] Update waiting - reload to activate");
             }
-            
-            // Check for updates periodically
-            setInterval(() => {
-              registration.update();
-            }, 60000); // Check every minute
-            
-            // Check for updates
-            registration.addEventListener('updatefound', () => {
+
+            setInterval(() => registration.update(), 60000);
+
+            registration.addEventListener("updatefound", () => {
               console.log("[SW] Update found");
               const newWorker = registration.installing;
-              newWorker.addEventListener('statechange', () => {
-                if (newWorker.state === 'installed') {
+              newWorker.addEventListener("statechange", () => {
+                if (newWorker.state === "installed") {
                   if (navigator.serviceWorker.controller) {
                     console.log("[SW] New version available - reload to update");
                   } else {
@@ -54,234 +44,194 @@
           })
           .catch(err => {
             console.error("[SW] Registration failed:", err);
-            // Show user-friendly error if needed
-            if (err.message && (err.message.includes('HTTPS') || err.message.includes('localhost'))) {
+            if (err.message && (err.message.includes("HTTPS") || err.message.includes("localhost"))) {
               console.warn("[SW] Service workers require HTTPS or localhost. Please use a local server.");
             }
           });
       });
-      
-      // Listen for service worker controller changes
-      navigator.serviceWorker.addEventListener('controllerchange', () => {
+
+      navigator.serviceWorker.addEventListener("controllerchange", () => {
         console.log("[SW] Controller changed - reloading page");
         window.location.reload();
       });
     } else {
       console.warn("[SW] Service Workers not supported in this browser");
     }
-    
-    // PWA Install Prompt Handler
+
     let deferredPrompt;
     let installBtn, installPromptContainer, headerInstallBtn, installStatusText;
-    
-    // Wait for DOM to be ready
-    document.addEventListener('DOMContentLoaded', () => {
-      installBtn = document.getElementById('installBtn');
-      installPromptContainer = document.getElementById('installPromptContainer');
-      headerInstallBtn = document.getElementById('headerInstallBtn');
-      installStatusText = document.getElementById('installStatusText');
-      
-      // Run PWA checks
+
+    document.addEventListener("DOMContentLoaded", () => {
+      installBtn = document.getElementById("installBtn");
+      installPromptContainer = document.getElementById("installPromptContainer");
+      headerInstallBtn = document.getElementById("headerInstallBtn");
+      installStatusText = document.getElementById("installStatusText");
+
       checkPWARequirements();
-      
-      // Header install button click
+
       if (headerInstallBtn) {
-        headerInstallBtn.addEventListener('click', () => {
+        headerInstallBtn.addEventListener("click", () => {
           if (installBtn) installBtn.click();
         });
       }
     });
-    
+
     function checkPWARequirements() {
-      console.log('[PWA] Checking requirements...');
-      
-      // Check service worker
-      if ('serviceWorker' in navigator) {
+      console.log("[PWA] Checking requirements...");
+
+      if ("serviceWorker" in navigator) {
         navigator.serviceWorker.getRegistration().then(reg => {
           if (reg && reg.active) {
-            console.log('[PWA] ✅ Service Worker registered:', reg.scope);
+            console.log("[PWA] Service Worker registered:", reg.scope);
           } else {
-            console.warn('[PWA] ⚠️ Service Worker not registered yet');
+            console.warn("[PWA] Service Worker not registered yet");
           }
         });
       }
-      
-      // Check HTTPS/localhost
-      const isSecure = location.protocol === 'https:' || 
-                      location.hostname === 'localhost' || 
-                      location.hostname === '127.0.0.1';
+
+      const isSecure =
+        location.protocol === "https:" ||
+        location.hostname === "localhost" ||
+        location.hostname === "127.0.0.1";
+
       if (!isSecure) {
-        console.error('[PWA] ❌ Must be on HTTPS or localhost. Current:', location.href);
+        console.error("[PWA] Must be on HTTPS or localhost. Current:", location.href);
         if (installStatusText) {
-          installStatusText.innerHTML = `⚠️ Requires HTTPS or localhost (currently: ${location.protocol}//${location.hostname})`;
-          installStatusText.style.color = 'var(--danger)';
+          installStatusText.textContent = `Requires HTTPS or localhost (currently: ${location.protocol}//${location.hostname})`;
+          installStatusText.style.color = "var(--danger)";
         }
         if (installBtn) {
           installBtn.disabled = true;
-          installBtn.textContent = '📱 Install (Requires HTTPS)';
+          installBtn.textContent = "Install (Requires HTTPS)";
         }
       } else {
-        console.log('[PWA] ✅ Secure context:', location.href);
+        console.log("[PWA] Secure context:", location.href);
         if (installStatusText) {
-          installStatusText.textContent = 'Ready to install. Click button when it appears.';
-          installStatusText.style.color = 'var(--muted)';
+          installStatusText.textContent = "Ready to install. Click when the button appears.";
+          installStatusText.style.color = "var(--muted)";
         }
       }
-      
-      // Check if already installed
-      const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
-                          window.navigator.standalone;
+
+      const isStandalone =
+        window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone;
       if (isStandalone) {
-        console.log('[PWA] ℹ️ App already installed');
+        console.log("[PWA] App already installed");
         if (installPromptContainer) {
-          installPromptContainer.style.display = 'none';
+          installPromptContainer.style.display = "none";
         }
       }
     }
-    
-    window.addEventListener('beforeinstallprompt', (e) => {
-      console.log('[PWA] ✅ beforeinstallprompt event fired!');
-      // Prevent the mini-infobar from appearing on mobile
+
+    window.addEventListener("beforeinstallprompt", (e) => {
+      console.log("[PWA] beforeinstallprompt event fired");
       e.preventDefault();
-      // Stash the event so it can be triggered later
       deferredPrompt = e;
-      // Show the install buttons
+
       if (installPromptContainer) {
-        installPromptContainer.style.display = 'block';
-        console.log('[PWA] Install button shown in Settings');
+        installPromptContainer.style.display = "block";
       }
       if (headerInstallBtn) {
-        headerInstallBtn.style.display = 'inline-flex';
-        console.log('[PWA] Install button shown in Header');
+        headerInstallBtn.style.display = "inline-flex";
       }
       if (installBtn) {
         installBtn.disabled = false;
-        installBtn.textContent = '📱 Install App';
+        installBtn.textContent = "Install App";
       }
       if (installStatusText) {
-        installStatusText.textContent = '✅ Ready to install! Click the button above.';
-        installStatusText.style.color = 'var(--success)';
+        installStatusText.textContent = "Ready to install! Click the button above.";
+        installStatusText.style.color = "var(--success)";
       }
     });
-    
-    // Handle install button click - use event delegation since button might not exist yet
-    document.addEventListener('click', async (e) => {
-      if (e.target && e.target.id === 'installBtn') {
-        console.log('[PWA] Install button clicked');
-        
+
+    document.addEventListener("click", async (e) => {
+      if (e.target && e.target.id === "installBtn") {
+        console.log("[PWA] Install button clicked");
+
         if (!deferredPrompt) {
-          console.warn('[PWA] No deferred prompt available');
-          // Show manual instructions
-          const instructions = `
-            To install this app:
-            
-            Chrome/Edge Desktop:
-            - Click the install icon in the address bar, OR
-            - Menu (⋮) → Install "Offline QR Ticket System"
-            
-            Chrome Android:
-            - Menu (⋮) → Install app, OR
-            - Menu → Add to Home screen
-            
-            Safari iOS:
-            - Share button → Add to Home Screen
-            
-            Note: Install prompt requires HTTPS or localhost
-          `;
-          alert(instructions);
+          console.warn("[PWA] No deferred prompt available");
+          alert(
+            "Install instructions:\n\n" +
+            "Chrome/Edge Desktop:\n" +
+            "- Click the install icon in the address bar, or\n" +
+            "- Menu (...) -> Install \"Offline QR Ticket System\"\n\n" +
+            "Chrome Android:\n" +
+            "- Menu (...) -> Install app, or\n" +
+            "- Menu -> Add to Home screen\n\n" +
+            "Safari iOS:\n" +
+            "- Share -> Add to Home Screen\n\n" +
+            "Note: HTTPS or localhost is required for installation."
+          );
           return;
         }
-        
+
         try {
-          // Show the install prompt
           deferredPrompt.prompt();
-          console.log('[PWA] Prompt shown');
-          
-          // Wait for the user to respond to the prompt
           const { outcome } = await deferredPrompt.userChoice;
-          console.log('[PWA] User choice:', outcome);
-          
-          if (outcome === 'accepted') {
-            console.log('[PWA] ✅ User accepted the install prompt');
-            e.target.textContent = 'Installed!';
+          console.log("[PWA] User choice:", outcome);
+
+          if (outcome === "accepted") {
+            e.target.textContent = "Installed!";
             e.target.disabled = true;
-          } else {
-            console.log('[PWA] User dismissed the install prompt');
           }
         } catch (err) {
-          console.error('[PWA] Error showing prompt:', err);
-          alert('Install prompt error. Please use browser menu to install.');
+          console.error("[PWA] Error showing prompt:", err);
+          alert("Install prompt error. Please use the browser menu to install.");
         }
-        
-        // Clear the deferredPrompt
+
         deferredPrompt = null;
         if (installPromptContainer) {
-          installPromptContainer.style.display = 'none';
+          installPromptContainer.style.display = "none";
         }
       }
     });
-    
-    // Detect if app is already installed
-    window.addEventListener('appinstalled', () => {
-      console.log('[PWA] ✅ App was installed successfully!');
+
+    window.addEventListener("appinstalled", () => {
+      console.log("[PWA] App was installed successfully");
       if (installPromptContainer) {
         installPromptContainer.innerHTML = `
           <label>Install App</label>
-          <p class="setting-desc" style="color: var(--success);">✅ App installed successfully!</p>
+          <p class="setting-desc" style="color: var(--success);">App installed successfully!</p>
         `;
       }
       deferredPrompt = null;
     });
-    
-    // Check if app is already installed (standalone mode)
-    if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
-      console.log('[PWA] ℹ️ App is already installed (standalone mode)');
+
+    if (window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone) {
+      console.log("[PWA] App is already installed (standalone mode)");
       if (installPromptContainer) {
-        installPromptContainer.style.display = 'none';
+        installPromptContainer.style.display = "none";
       }
     }
-    
-    // Log PWA status after page load
-    window.addEventListener('load', () => {
+
+    window.addEventListener("load", () => {
       setTimeout(() => {
-        console.log('[PWA] Status check:');
-        console.log('  - URL:', location.href);
-        console.log('  - Protocol:', location.protocol);
-        console.log('  - Hostname:', location.hostname);
-        console.log('  - Service Worker:', 'serviceWorker' in navigator ? 'Supported' : 'Not supported');
-        console.log('  - Standalone:', window.matchMedia('(display-mode: standalone)').matches);
-        console.log('  - beforeinstallprompt:', 'onbeforeinstallprompt' in window ? 'Supported' : 'Not supported');
+        console.log("[PWA] Status check:");
+        console.log("  - URL:", location.href);
+        console.log("  - Protocol:", location.protocol);
+        console.log("  - Hostname:", location.hostname);
+        console.log("  - Service Worker:", "serviceWorker" in navigator ? "Supported" : "Not supported");
+        console.log("  - Standalone:", window.matchMedia("(display-mode: standalone)").matches);
+        console.log("  - beforeinstallprompt:", "onbeforeinstallprompt" in window ? "Supported" : "Not supported");
       }, 1000);
     });
   </script>
 </head>
 <body>
   <header>
-    <img src="icon-192.png" alt="Offline QR Ticket System logo" class="logo">
-    <h1>QR Ticket System</h1>
-    <button id="headerInstallBtn" class="header-install-btn" style="display: none;">
-      <span>📱</span> Install App
-    </button>
-    <div id="syncStatusBadge" class="sync-status hidden" role="status" aria-live="polite">
-      <span class="sync-dot"></span>
-      <span id="syncStatusText">Offline</span>
+    <div class="header-bar">
+      <div class="brand">
+        <img src="icon-192.png" alt="Offline QR Ticket System logo" class="logo" />
+        <div class="brand-text">
+          <h1>Offline QR Ticket System</h1>
+          <p class="subtitle">Generate &bull; Print &bull; Scan &bull; Track &mdash; fully offline PWA</p>
+        </div>
+      </div>
+      <button id="headerInstallBtn" class="header-install-btn" style="display: none;">
+        Install App
+      </button>
     </div>
   </header>
 
-  <div id="globalLoader" class="global-loader hidden" role="status" aria-live="assertive">
-    <div class="loader-content">
-      <div class="spinner" aria-hidden="true"></div>
-      <p id="loaderMessage">Working...</p>
-    </div>
-  </div>
-
-  <div id="syncAlert" class="sync-alert hidden" role="alert" aria-live="assertive">
-    <span class="sync-alert-icon">⚠️</span>
-    <span id="syncAlertText">Cloud sync unavailable.</span>
-    <button id="syncAlertDismiss" type="button" aria-label="Dismiss sync warning">✕</button>
-  </div>
-
-  <!-- Tab Navigation -->
   <nav class="tabs">
     <button class="tab-btn active" data-tab="generator">Generate</button>
     <button class="tab-btn" data-tab="scanner">Camera</button>
@@ -289,10 +239,10 @@
   </nav>
 
   <main>
-    <!-- Generator Tab -->
     <section id="generator" class="tab-content active">
       <div class="card">
         <h2>Generate Tickets</h2>
+        <p class="card-subtitle">Create ticket batches that stay saved offline until you reset them.</p>
         <div class="generate-section">
           <div class="generate-controls">
             <div class="input-group">
@@ -300,35 +250,18 @@
               <input id="ticketCount" type="number" value="20" min="1" max="500" />
             </div>
             <button id="generateBtn" class="primary-btn">Generate Tickets</button>
-            <p id="generationLockNotice" class="generation-notice hidden">
-              CSV import in effect. Ticket generation is disabled across devices to prevent duplicates.
-            </p>
           </div>
-        
-        <div class="action-buttons">
-          <div class="action-cluster" aria-label="Print and Export options">
-            <button id="downloadSheetBtn" class="action-btn">
-              <span>📄</span> Print Sheet
-            </button>
-            <button id="exportBtn" class="action-btn">
-              <span>💾</span> Export CSV
-            </button>
-            <button id="exportJSONBtn" class="action-btn">
-              <span>📤</span> Export JSON (Sync)
-            </button>
-            <button id="importBtn" class="action-btn">
-              <span>📥</span> Import JSON (Sync)
-            </button>
-            <button id="importCsvBtn" class="action-btn">
-              <span>📥</span> Import CSV (Cloud)
-            </button>
+
+          <div class="action-buttons" aria-label="Print and export options">
+            <button id="downloadSheetBtn" class="action-btn">Print Sheet</button>
+            <button id="exportBtn" class="action-btn">Export CSV</button>
+            <button id="exportJSONBtn" class="action-btn">Export JSON (Sync)</button>
+            <button id="importBtn" class="action-btn">Import JSON (Sync)</button>
             <input id="importFile" type="file" accept="application/json" class="hidden" aria-label="Import tickets JSON file" />
-            <input id="importCsvFile" type="file" accept=".csv,text/csv" class="hidden" aria-label="Import tickets CSV file" />
           </div>
-        </div>
         </div>
       </div>
-      
+
       <div class="card">
         <div class="tickets-header">
           <h3>Generated Tickets</h3>
@@ -338,70 +271,52 @@
       </div>
     </section>
 
-    <!-- Scanner Tab -->
     <section id="scanner" class="tab-content">
-      <div class="card">
+      <div class="card scanner-card">
         <h2>Camera Scanner</h2>
-        <div class="row">
+        <p class="card-subtitle">Align the QR code inside the frame and hold steady until the result appears.</p>
+        <div class="row scanner-controls">
           <button id="startScannerBtn">Start Scanner</button>
           <button id="stopScannerBtn" disabled>Stop Scanner</button>
         </div>
-        <div class="scanner-shell">
-          <div id="reader" class="reader"></div>
-          <p class="scanner-tip">Align your ticket inside the frame. Tap the result panel to scan again.</p>
+        <div id="reader" class="reader"></div>
+        <div class="scanner-guidance">
+          <span class="scanner-icon" aria-hidden="true">🎯</span>
+          <div class="scanner-text">
+            <p>Hold tickets about 10-15 cm from the camera for a quick focus lock.</p>
+            <p class="scan-hint">Tap the feedback banner, or wait for it to close, to scan the next guest.</p>
+          </div>
         </div>
-        <div id="scanResult" class="scan-result"></div>
+        <div id="scanResult" class="scan-result" aria-live="polite"></div>
       </div>
-      
-      <!-- Scan Feedback Modal -->
+
       <div id="scanFeedback" class="scan-feedback hidden">
         <div class="feedback-content">
           <div class="feedback-icon" id="feedbackIcon"></div>
           <div class="feedback-title" id="feedbackTitle"></div>
           <div class="feedback-code" id="feedbackCode"></div>
           <div class="feedback-message" id="feedbackMessage"></div>
+          <div class="feedback-hint">Tap anywhere to dismiss and scan another ticket.</div>
         </div>
       </div>
     </section>
 
-    <!-- Dashboard Tab -->
     <section id="dashboard" class="tab-content">
       <div class="card">
         <h2>Ticket Dashboard</h2>
         <div class="stats">
-          <div class="stat"><div class="stat-value" id="totalTickets">0</div><div class="stat-label">Total</div></div>
-          <div class="stat"><div class="stat-value" id="usedTickets">0</div><div class="stat-label">Used</div></div>
-          <div class="stat"><div class="stat-value" id="unusedTickets">0</div><div class="stat-label">Unused</div></div>
-        </div>
-      </div>
-      <div class="card" id="cloudSyncCard" style="display: none;">
-        <h2>Cloud Sync</h2>
-        <div class="sync-summary">
-          <div class="sync-line">
-            <span>Status:</span>
-            <strong id="cloudSyncStatusText">Offline</strong>
+          <div class="stat">
+            <div class="stat-value" id="totalTickets">0</div>
+            <div class="stat-label">Total</div>
           </div>
-          <div class="sync-line">
-            <span>Pending actions:</span>
-            <strong id="cloudSyncPending">0</strong>
+          <div class="stat">
+            <div class="stat-value" id="usedTickets">0</div>
+            <div class="stat-label">Used</div>
           </div>
-          <div class="sync-line">
-            <span>Last sync:</span>
-            <strong id="cloudSyncLastSync">Never</strong>
+          <div class="stat">
+            <div class="stat-value" id="unusedTickets">0</div>
+            <div class="stat-label">Unused</div>
           </div>
-          <div class="sync-line">
-            <span>Cloud totals:</span>
-            <strong id="cloudSyncTotals">--</strong>
-          </div>
-        </div>
-        <div class="sync-actions">
-          <button id="manualSyncBtn" class="action-btn">
-            <span>☁️</span> Sync to Cloud (Manual)
-          </button>
-          <p class="sync-note" id="cloudSyncNote">
-            Manual sync keeps scanning lightning-fast. Press when you need to upload changes to other devices.
-          </p>
-          <p class="sync-note" id="cloudSyncMode">Mode: Offline-first (Manual)</p>
         </div>
       </div>
 
@@ -411,45 +326,37 @@
           <div class="setting-item" id="installPromptContainer">
             <label>Install App</label>
             <p class="setting-desc">Install this app on your device for quick access and offline use.</p>
-            <button id="installBtn" class="primary-btn">📱 Install App</button>
+            <button id="installBtn" class="primary-btn">Install App</button>
             <p class="setting-desc" id="installStatus" style="margin-top: 8px; font-size: 0.85rem; color: var(--muted);">
               <span id="installStatusText">Waiting for install prompt...</span>
             </p>
-            
-            <!-- Manual Installation Instructions -->
-            <div class="install-instructions" style="margin-top: 16px; padding: 12px; background: #f8f9fa; border-radius: 8px; border-left: 3px solid var(--brand);">
-              <p style="margin: 0 0 8px 0; font-weight: 600; font-size: 0.9rem;">📱 Manual Installation:</p>
-              <div style="font-size: 0.85rem; color: var(--muted);">
-                <p style="margin: 4px 0;"><strong>Chrome Android:</strong></p>
-                <p style="margin: 4px 0 8px 20px;">Menu (⋮) → Install app, OR<br/>Menu → Add to Home screen</p>
-                
-                <p style="margin: 4px 0;"><strong>Safari iOS:</strong></p>
-                <p style="margin: 4px 0 8px 20px;">Share button (□↑) → Add to Home Screen</p>
-                
-                <p style="margin: 8px 0 0 0; padding-top: 8px; border-top: 1px solid #e9ecef; color: var(--warning);">
-                  ⚠️ Note: Install prompt requires HTTPS or localhost
-                </p>
+
+            <div class="install-instructions">
+              <p class="install-heading">Manual Installation</p>
+              <div class="install-steps">
+                <p><strong>Chrome Android:</strong></p>
+                <p class="install-step">Menu (...) -> Install app, or Menu -> Add to Home screen</p>
+
+                <p><strong>Safari iOS:</strong></p>
+                <p class="install-step">Share -> Add to Home Screen</p>
+
+                <p class="install-note">Note: the install prompt requires HTTPS or localhost.</p>
               </div>
             </div>
           </div>
-          <div class="setting-item">
-            <label>Cloud Sync</label>
-            <p class="setting-desc">Keeps tickets in sync across devices using Supabase.</p>
-            <p class="setting-desc">Status: <span id="cloudSyncStatusLabel">Disabled</span></p>
-            <p class="setting-desc">Device ID: <code id="cloudSyncDeviceId">-</code></p>
-            <p class="setting-desc">Last Sync: <span id="cloudSyncLastSync">Never</span></p>
-            <p class="setting-desc">Pending Queue: <span id="cloudSyncPending">0</span></p>
-          </div>
+
           <div class="setting-item">
             <label>Reset All Tickets</label>
             <p class="setting-desc">Permanently delete all tickets and reset the system.</p>
             <button id="resetBtn" class="danger">Reset All Tickets</button>
           </div>
+
           <div class="setting-item">
             <label>Export Data</label>
-            <p class="setting-desc">Download all tickets as CSV file for backup.</p>
+            <p class="setting-desc">Download all tickets as a CSV file for backup.</p>
             <button id="exportSettingsBtn">Export CSV</button>
           </div>
+
           <div class="setting-item">
             <label>Import Data</label>
             <p class="setting-desc">Restore tickets from a JSON backup file.</p>
@@ -462,76 +369,67 @@
   </main>
 
   <footer>
-    <small>Tap the install button in the browser menu to add to Home Screen. Works offline after first load.</small>
+    <small>Tap the install button in your browser to add the app to your home screen. Works offline after the first load.</small>
   </footer>
 
-  <!-- Local libs (download into project for full offline). If missing, fallback to CDN. -->
   <script>
-    // Helper to inject script tags for local-first then CDN fallback
     function loadScriptLocalOrCdn(localPath, cdnUrl) {
       return new Promise((resolve, reject) => {
-        const tryLocal = () => {
-          fetch(localPath, { method: "HEAD" })
-            .then(resp => {
-              if (resp.ok) {
-                const s = document.createElement("script");
-                s.src = localPath;
-                s.onload = () => resolve();
-                s.onerror = () => reject(new Error("local load failed"));
-                document.head.appendChild(s);
-              } else {
-                const s = document.createElement("script");
-                s.src = cdnUrl;
-                s.onload = () => resolve();
-                s.onerror = () => reject(new Error("cdn load failed"));
-                document.head.appendChild(s);
-              }
-            })
-            .catch(() => {
-              const s = document.createElement("script");
-              s.src = cdnUrl;
-              s.onload = () => resolve();
-              s.onerror = () => reject(new Error("cdn load failed"));
-              document.head.appendChild(s);
-            });
-        };
-        tryLocal();
+        fetch(localPath, { method: "HEAD" })
+          .then(resp => {
+            const script = document.createElement("script");
+            script.src = resp.ok ? localPath : cdnUrl;
+            script.onload = () => resolve();
+            script.onerror = () => reject(new Error("script load failed"));
+            document.head.appendChild(script);
+          })
+          .catch(() => {
+            const script = document.createElement("script");
+            script.src = cdnUrl;
+            script.onload = () => resolve();
+            script.onerror = () => reject(new Error("script load failed"));
+            document.head.appendChild(script);
+          });
       });
     }
 
-    // Load QR libraries (qrcode.min.js and html5-qrcode.min.js). Ensure these files are present locally for true offline.
     Promise.all([
       loadScriptLocalOrCdn("qrcode.min.js", "https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"),
       loadScriptLocalOrCdn("html5-qrcode.min.js", "https://unpkg.com/html5-qrcode/minified/html5-qrcode.min.js")
-    ]).then(() => {
-      console.log("Scripts loaded, checking for QRCode...");
-      // Wait for QRCode to be available globally (some libraries need a moment to initialize)
-      let retryCount = 0;
-      const maxRetries = 40; // 40 * 50ms = 2 seconds max wait
-      const waitForQRCode = () => {
-        retryCount++;
-        console.log(`Checking for QRCode (attempt ${retryCount}/${maxRetries})...`, typeof QRCode);
-        if (typeof QRCode !== 'undefined') {
-          console.log("QRCode found! Loading main application module");
-          import(`./main.js?v=${window.APP_VERSION || "dev"}`)
-            .catch(err => console.error("Failed to load main module", err));
-        } else if (retryCount < maxRetries) {
-          // Retry after a short delay
-          setTimeout(waitForQRCode, 50);
-        } else {
-          // Library failed to load - show error but still load script (will use CDN fallback)
-          console.error("QRCode library not found after loading. Loading main module anyway - it will retry.");
-          import(`./main.js?v=${window.APP_VERSION || "dev"}`)
-            .catch(err => console.error("Failed to load main module", err));
-        }
-      };
-      // Give it a moment for the script to execute
-      setTimeout(waitForQRCode, 100);
-    }).catch(err => {
-      console.error("Failed to load QR libraries", err);
-      import(`./main.js?v=${window.APP_VERSION || "dev"}`)
-        .catch(loadErr => console.error("Failed to load main module", loadErr));
-    });
+    ])
+      .then(() => {
+        console.log("Scripts loaded, checking for QRCode...");
+        let retryCount = 0;
+        const maxRetries = 40;
+
+        const waitForQRCode = () => {
+          retryCount += 1;
+          if (typeof QRCode !== "undefined") {
+            console.log("QRCode found! Loading script.js");
+            const script = document.createElement("script");
+            script.src = "script.js";
+            document.body.appendChild(script);
+            return;
+          }
+
+          if (retryCount < maxRetries) {
+            setTimeout(waitForQRCode, 50);
+          } else {
+            console.error("QRCode library not found after loading. Loading script.js anyway.");
+            const script = document.createElement("script");
+            script.src = "script.js";
+            document.body.appendChild(script);
+          }
+        };
+
+        setTimeout(waitForQRCode, 100);
+      })
+      .catch(err => {
+        console.error("Failed to load QR libraries", err);
+        const script = document.createElement("script");
+        script.src = "script.js";
+        document.body.appendChild(script);
+      });
   </script>
 </body>
 </html>

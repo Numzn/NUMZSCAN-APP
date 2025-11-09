@@ -1,24 +1,28 @@
 export function setupTabs(dom) {
   const { tabButtons, tabContents } = dom;
-  if (!tabButtons || tabButtons.length === 0 || !tabContents || tabContents.length === 0) {
+  const buttons = Array.from(tabButtons || []);
+  const contents = Array.from(tabContents || []);
+
+  if (buttons.length === 0 || contents.length === 0) {
     return;
   }
 
   function activateTab(targetId) {
-    tabButtons.forEach((btn) => {
+    buttons.forEach((btn) => {
       const isActive = btn.dataset.tab === targetId;
       btn.classList.toggle("active", isActive);
       btn.setAttribute("aria-selected", isActive ? "true" : "false");
     });
 
-    tabContents.forEach((content) => {
+    contents.forEach((content) => {
       const isActive = content.id === targetId;
+      content.classList.toggle("active", isActive);
       content.classList.toggle("hidden", !isActive);
       content.setAttribute("aria-hidden", isActive ? "false" : "true");
     });
   }
 
-  tabButtons.forEach((btn) => {
+  buttons.forEach((btn) => {
     btn.addEventListener("click", () => {
       const targetId = btn.dataset.tab;
       if (!targetId) return;
@@ -26,8 +30,6 @@ export function setupTabs(dom) {
     });
   });
 
-  const activeButton = Array.from(tabButtons).find((btn) => btn.classList.contains("active"));
-  activateTab(activeButton ? activeButton.dataset.tab : tabButtons[0].dataset.tab);
+  const activeButton = buttons.find((btn) => btn.classList.contains("active"));
+  activateTab(activeButton ? activeButton.dataset.tab : buttons[0].dataset.tab);
 }
-
-
