@@ -1,5 +1,5 @@
-const SCAN_DEBOUNCE_MS = 500;
-const SCAN_RESET_DELAY_MS = 1200;
+const SCAN_DEBOUNCE_MS = 250; // lower debounce for snappier repeat scans
+const SCAN_RESET_DELAY_MS = 900; // quicker cooldown before accepting next scan
 
 export function setupScanner(context) {
   const { dom, ui, state, findTicket, onTicketUpdated, supabase, eventId, defaultScanLocation } = context;
@@ -103,13 +103,13 @@ export function setupScanner(context) {
 
     if (!ticket) {
       ui.showScanFeedback("error", "Unknown Ticket", ticketId, "This ticket is not in the system.");
-      scheduleScanReset(1500);
+      scheduleScanReset(SCAN_RESET_DELAY_MS);
       return;
     }
 
     if (ticket.used) {
       ui.showScanFeedback("warning", "Already Used", ticket.id, "This ticket was already scanned.");
-      scheduleScanReset(1500);
+      scheduleScanReset(SCAN_RESET_DELAY_MS);
       return;
     }
 

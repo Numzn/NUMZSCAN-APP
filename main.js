@@ -70,8 +70,10 @@ async function bootstrap() {
   await migrateFromLocalStorage();
 
   state.settings = loadAppSettings(SETTINGS_DEFAULTS);
-  const supabaseAvailable = typeof SupabaseSync !== "undefined";
-  const autoSyncEnabled = parseBoolean(state.settings.autoSyncEnabled, false);
+  // const supabaseAvailable = typeof SupabaseSync !== "undefined";
+  // const autoSyncEnabled = parseBoolean(state.settings.autoSyncEnabled, false);
+  const supabaseAvailable = false; // Supabase disabled for local-only mode
+  const autoSyncEnabled = false;
 
   state.supabaseEnabled = supabaseAvailable;
   state.supabaseAutoSync = supabaseAvailable && autoSyncEnabled;
@@ -135,18 +137,12 @@ async function bootstrap() {
     eventId: EVENT_ID,
   });
 
-  setupSupabaseListeners();
-  if (state.supabaseAutoSync) {
-    await initialSupabaseSync();
-  } else if (state.supabaseEnabled) {
-    ui.updateSyncIndicator(state.supabaseStatus, false, {
-      manualMode: true,
-      getDeviceId: () => SupabaseSync.getDeviceId(),
-      getLastSyncAt: () => SupabaseSync.getLastSyncAt(),
-      getTotals: () => state.supabaseAnalytics,
-    });
-  } else {
-    ui.updateSyncIndicator(state.supabaseStatus, false);
+  // Supabase sync disabled: keep indicator in local-only state
+  // setupSupabaseListeners();
+  ui.updateSyncIndicator(state.supabaseStatus, false);
+  if (dom.manualSyncBtn) {
+    dom.manualSyncBtn.disabled = true;
+    dom.manualSyncBtn.title = "Cloud sync disabled in local-only mode";
   }
 
   ui.updateGenerationLockUI(state.settings.generationLocked);
@@ -195,6 +191,24 @@ function setGenerationLock(locked, { reason = "", propagate = true } = {}) {
   }
 }
 
+function createSupabaseBridge() {
+  // Supabase integration disabled; provide no-op implementations for local-only mode
+  return {
+    isEnabled: () => false,
+    enqueue() {},
+    enqueueControlTicket() {},
+    getDeviceId: () => "local-device",
+    fetchTickets: () => Promise.resolve([]),
+    fetchScansSince: () => Promise.resolve([]),
+    flushQueue: () => Promise.resolve(),
+    getLastSyncAt: () => null,
+    setLastSyncAt() {},
+    getStatus: () => ({ ...state.supabaseStatus }),
+    getPendingCount: () => 0,
+  };
+}
+
+/* Original Supabase bridge retained for reference:
 function createSupabaseBridge(options = {}) {
   const { force = false, autoFlush } = options;
   const supabaseAvailable = typeof SupabaseSync !== "undefined";
@@ -250,6 +264,7 @@ function createSupabaseBridge(options = {}) {
     getPendingCount: () => (supabaseAvailable ? SupabaseSync.getPendingCount() : 0),
   };
 }
+*/
 
 function setupSupabaseListeners() {
   if (typeof SupabaseSync === "undefined" || !state.supabaseEnabled) {
