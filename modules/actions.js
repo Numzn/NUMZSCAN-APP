@@ -481,8 +481,6 @@ export function setupActions(context) {
     });
   }
 
-  return {
-    refresh: refreshTickets,
-  };
+  return {};
 }
 

@@ -51,12 +51,21 @@ let csvImportController = null;
 let supabaseUnsubscribe = null;
 let supabaseErrorUnsubscribe = null;
 
-document.addEventListener("DOMContentLoaded", () => {
+function start() {
   bootstrap().catch((err) => {
     console.error("[App] Failed to initialize", err);
     alert("Failed to initialize app. Check console for details.");
   });
-});
+}
+
+// main.js is injected dynamically after the QR libraries finish loading, so
+// DOMContentLoaded has usually already fired by the time this runs — a
+// listener for it would then never call back.
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", start);
+} else {
+  start();
+}
 
 async function bootstrap() {
   dom = getDomRefs();

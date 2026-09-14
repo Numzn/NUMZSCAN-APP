@@ -1,4 +1,4 @@
-const CACHE_NAME = 'offline-qr-v5'; // main.js is now the live entry point; own-backend sync.js replaces Supabase
+const CACHE_NAME = 'offline-qr-v7'; // fix: actions.js referenced an undefined refreshTickets, crashing bootstrap before any listeners past generateBtn got attached
 
 // Get the base path from the service worker location
 let basePath = self.location.pathname.replace('/service-worker.js', '');
