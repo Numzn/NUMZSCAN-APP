@@ -26,19 +26,12 @@ npm-debug.log*
 dist/
 build/
 
-# Optional: Keep server files if you want
-# Uncomment if you don't want to track server files
-# server.py
-# *.pyc
-# __pycache__/
+# api/ backend
+api/node_modules/
+api/npm-debug.log*
 
-# Optional: Keep certificate files private
-# Uncomment if you have SSL certificates
-# *.crt
-# *.key
-# *.pem
-# *.pfx
-
-# Keep all project files (no exclusions needed for this simple project)
-# All HTML, CSS, JS, and asset files should be tracked
+# Never commit TLS private material
+*.key
+*.pem
+*.pfx
 

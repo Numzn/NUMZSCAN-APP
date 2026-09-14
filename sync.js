@@ -1,11 +1,13 @@
-// Supabase synchronization helper
-// Relies on SupabaseConfig global defined in supabase-config.js
-// Provides global SupabaseSync object for script.js to use.
+// Ticket cloud sync — talks to our own NUMZSCAN API (Express + Postgres),
+// not a third party. Replaces the old Supabase-based sync (removed after a
+// service_role key was found committed to this repo).
+// Provides global TicketSync for main.js to use.
 
-(function initSupabaseSync() {
-  const DEVICE_ID_STORAGE_KEY = "supabaseDeviceId";
-  const QUEUE_STORAGE_KEY = "supabaseSyncQueue";
-  const LAST_SYNC_KEY = "supabaseLastSync";
+(function initTicketSync() {
+  const API_BASE = "/api";
+  const DEVICE_ID_STORAGE_KEY = "numzscanDeviceId";
+  const QUEUE_STORAGE_KEY = "numzscanSyncQueue";
+  const LAST_SYNC_KEY = "numzscanLastSync";
   const MAX_RETRIES = 5;
   const RETRY_BACKOFF_MS = 4000;
 
@@ -23,7 +25,7 @@
       const raw = localStorage.getItem(QUEUE_STORAGE_KEY);
       state.queue = raw ? JSON.parse(raw) : [];
     } catch (err) {
-      console.warn("[SupabaseSync] Failed to load queue, resetting", err);
+      console.warn("[TicketSync] Failed to load queue, resetting", err);
       state.queue = [];
     }
   }
@@ -32,7 +34,7 @@
     try {
       localStorage.setItem(QUEUE_STORAGE_KEY, JSON.stringify(state.queue));
     } catch (err) {
-      console.error("[SupabaseSync] Failed to persist queue", err);
+      console.error("[TicketSync] Failed to persist queue", err);
     }
     notify();
   }
@@ -50,7 +52,7 @@
         localStorage.removeItem(LAST_SYNC_KEY);
       }
     } catch (err) {
-      console.error("[SupabaseSync] Failed to persist last sync", err);
+      console.error("[TicketSync] Failed to persist last sync", err);
     }
   }
 
@@ -64,7 +66,7 @@
         localStorage.setItem(DEVICE_ID_STORAGE_KEY, id);
       }
     } catch (err) {
-      console.error("[SupabaseSync] Failed to obtain device id", err);
+      console.error("[TicketSync] Failed to obtain device id", err);
       id = `device-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     }
     state.deviceId = id;
@@ -81,7 +83,7 @@
           online: navigator.onLine,
         });
       } catch (err) {
-        console.error("[SupabaseSync] listener error", err);
+        console.error("[TicketSync] listener error", err);
       }
     });
   }
@@ -91,7 +93,7 @@
       try {
         cb(error);
       } catch (err) {
-        console.error("[SupabaseSync] error listener failed", err);
+        console.error("[TicketSync] error listener failed", err);
       }
     });
   }
@@ -127,14 +129,14 @@
     }
   }
 
-  async function supabaseRequest(path, options = {}) {
-    SupabaseConfig.ensureSupabaseConfig();
-    const url = `${SupabaseConfig.url}/rest/v1/${path}`;
-    const headers = Object.assign({}, SupabaseConfig.headers, options.headers || {});
-    const response = await fetch(url, { ...options, headers });
+  async function apiRequest(path, options = {}) {
+    const response = await fetch(`${API_BASE}${path}`, {
+      ...options,
+      headers: { "Content-Type": "application/json", ...(options.headers || {}) },
+    });
     if (!response.ok) {
-      const text = await response.text();
-      throw new Error(`Supabase error ${response.status}: ${text}`);
+      const text = await response.text().catch(() => "");
+      throw new Error(`API error ${response.status}: ${text || response.statusText}`);
     }
     return response.json().catch(() => null);
   }
@@ -142,31 +144,20 @@
   async function handleQueueItem(item) {
     const { type, payload } = item;
     switch (type) {
-      case "createTicket": {
-        return supabaseRequest(`${SupabaseConfig.tables.tickets}`, {
-          method: "POST",
-          body: JSON.stringify(payload),
-          headers: { Prefer: "resolution=merge-duplicates" },
-        });
-      }
-      case "updateTicket": {
-        return supabaseRequest(`${SupabaseConfig.tables.tickets}?id=eq.${encodeURIComponent(payload.id)}`, {
+      case "createTicket":
+        return apiRequest("/tickets", { method: "POST", body: JSON.stringify(payload) });
+      case "updateTicket":
+        return apiRequest(`/tickets/${encodeURIComponent(payload.id)}`, {
           method: "PATCH",
           body: JSON.stringify(payload.update),
         });
-      }
-      case "recordScan": {
-        return supabaseRequest(`${SupabaseConfig.tables.ticketScans}`, {
-          method: "POST",
-          body: JSON.stringify(payload),
-        });
-      }
-      case "resetTicket": {
-        return supabaseRequest(`${SupabaseConfig.tables.tickets}?id=eq.${encodeURIComponent(payload.id)}`, {
+      case "recordScan":
+        return apiRequest("/ticket-scans", { method: "POST", body: JSON.stringify(payload) });
+      case "resetTicket":
+        return apiRequest(`/tickets/${encodeURIComponent(payload.id)}`, {
           method: "PATCH",
           body: JSON.stringify({ active: true, last_synced_at: new Date().toISOString() }),
         });
-      }
       default:
         throw new Error(`Unknown queue action: ${type}`);
     }
@@ -194,11 +185,11 @@
           await handleQueueItem(item);
           removeFromQueue(item.id);
         } catch (error) {
-          console.error("[SupabaseSync] Failed to sync queue item", item, error);
+          console.error("[TicketSync] Failed to sync queue item", item, error);
           notifyError(error);
           item.retries += 1;
           if (item.retries > MAX_RETRIES) {
-            console.error("[SupabaseSync] Dropping queue item after max retries", item);
+            console.error("[TicketSync] Dropping queue item after max retries", item);
             removeFromQueue(item.id);
           } else {
             setTimeout(() => flushQueue(), RETRY_BACKOFF_MS * item.retries);
@@ -214,14 +205,18 @@
     }
   }
 
-  async function fetchAllTickets() {
-    const result = await supabaseRequest(`${SupabaseConfig.tables.tickets}?select=*`);
+  async function fetchAllTickets(eventId) {
+    const qs = eventId ? `?event_id=${encodeURIComponent(eventId)}` : "";
+    const result = await apiRequest(`/tickets${qs}`);
     return Array.isArray(result) ? result : [];
   }
 
-  async function fetchTicketScansSince(timestamp) {
-    const filter = timestamp ? `&scan_at=gte.${encodeURIComponent(timestamp)}` : "";
-    const result = await supabaseRequest(`${SupabaseConfig.tables.ticketScans}?select=*&order=scan_at.asc${filter}`);
+  async function fetchTicketScansSince(timestamp, eventId) {
+    const params = new URLSearchParams();
+    if (timestamp) params.set("since", timestamp);
+    if (eventId) params.set("event_id", eventId);
+    const qs = params.toString() ? `?${params.toString()}` : "";
+    const result = await apiRequest(`/ticket-scans${qs}`);
     return Array.isArray(result) ? result : [];
   }
 
@@ -238,7 +233,7 @@
     window.addEventListener("offline", notify);
   }
 
-  window.SupabaseSync = {
+  window.TicketSync = {
     init,
     enqueue,
     flushQueue,

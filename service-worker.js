@@ -1,4 +1,4 @@
-const CACHE_NAME = 'offline-qr-v4'; // Updated to include modularized scripts
+const CACHE_NAME = 'offline-qr-v5'; // main.js is now the live entry point; own-backend sync.js replaces Supabase
 
 // Get the base path from the service worker location
 let basePath = self.location.pathname.replace('/service-worker.js', '');
@@ -40,8 +40,7 @@ const ASSETS = [
   normalizePath('modules/fundraising/overlay.js'),
   normalizePath('modules/fundraising/bridge.js'),
   normalizePath('modules/fundraising/autoSync.js'),
-  normalizePath('supabase-config.js'),
-  normalizePath('supabase-sync.js'),
+  normalizePath('sync.js'),
   normalizePath('manifest.json'),
   normalizePath('icon-192.png'),
   normalizePath('icon-512.png'),

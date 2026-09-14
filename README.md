@@ -2,21 +2,33 @@
 
 A Progressive Web App (PWA) for generating, printing, scanning, and tracking QR code tickets - fully offline capable.
 
+## NumzLab platform deployment
+
+This app now runs as a NumzLab platform service (`/srv/projects/numzscan-app`), not as a static Netlify/Render site. A small Express API (`api/`) serves both the frontend and a `/api/*` sync backend, backed by this platform's shared `infra-postgres` — replacing the Supabase integration this repo originally shipped with (see "Cloud Sync" below).
+
+```bash
+cp .env.example .env   # fill in NUMZSCAN_DB_PASSWORD and NUMZSCAN_GATEWAY_BIND_IP
+docker compose up -d --build
+curl http://127.0.0.1:3210/api/health
+```
+
+Registered in the Platform Registry (`infrastructure/platform-registry/registry.yaml`, key `numzscan`) and routed at `numzscan.lab.numz.site` via the NumzLab Gateway. Not yet published to OCI/public DNS — internal-only until that's decided.
+
 ## 📦 Package Contents
 
-This package includes all necessary files for the PWA to work completely offline:
-
 ```
-OfflineQRApp/
-├── index.html          # Main application file
-├── style.css           # Styles and responsive design
-├── script.js           # Core application logic
-├── manifest.json       # PWA manifest
-├── service-worker.js  # Service worker for offline caching
-├── icon-192.png       # App icon (192x192)
-├── icon-512.png       # App icon (512x512)
-├── qrcode.min.js      # QR code generation library
-└── html5-qrcode.min.js # QR code scanning library
+numzscan-app/
+├── index.html          # Ticket app shell (generate/scan/dashboard tabs)
+├── main.js             # Ticket app logic (ES module)
+├── modules/             # Ticket app modules (db, ui, scanner, sync bridge, ...)
+├── sync.js              # Cloud sync client — talks to this app's own api/, not Supabase
+├── fundraising.html     # Fundraising/OBS-overlay app shell
+├── fundraising-main.js  # Fundraising app logic
+├── modules/fundraising/ # Fundraising app modules
+├── api/                  # Express + Postgres backend (serves both apps + /api/*)
+├── style.css / manifest.json / service-worker.js
+├── icon-192.png / icon-512.png
+└── qrcode.min.js / html5-qrcode.min.js
 ```
 
 ## 🚀 Installation & Usage
@@ -155,16 +167,13 @@ When distributing this app:
 - No data sent to external servers
 - Works completely offline after first load
 
-## ☁️ Supabase Cloud Sync (Optional)
+## ☁️ Cloud Sync
 
-To enable multi-device synchronization:
+Multi-device sync no longer uses Supabase. An earlier version of this repo shipped a live Supabase `service_role` key committed to `supabase-config.js` — that file, `supabase-sync.js`, and `supabase-schema.sql` have been deleted, and the key should be rotated in the Supabase dashboard if it hasn't been already (it was exposed in a public repo).
 
-1. Run `supabase-schema.sql` in the Supabase SQL editor to create the `tickets` and `ticket_scans` tables.
-2. Open `supabase-config.js` and replace the placeholders with your Supabase project URL and service role key.
-3. Deploy the updated pack so every device shares the same configuration.
-4. Remember: storing a service role key client-side is a temporary measure until authentication is added.
+Sync now goes through this platform's own API (`api/`, backed by `infra-postgres`) via `sync.js`, which the app's `main.js` uses through the same offline queue/retry design as before — no external dependency, and the client only ever gets access to a handful of ticket-scoped endpoints (create/update/scan a ticket), not raw database credentials.
 
-After configuration, the app will queue offline actions locally and sync them with Supabase when connectivity is restored.
+Toggle it from the Dashboard tab's Cloud Sync card once the app is deployed behind the platform (see above) — nothing to configure client-side.
 
 ### CSV Import (Cloud Sync)
 

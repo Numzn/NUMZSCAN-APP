@@ -217,6 +217,13 @@
   </script>
 </head>
 <body>
+  <div id="globalLoader" class="global-loader hidden" role="status" aria-live="polite">
+    <div class="global-loader-box">
+      <span class="inline-spinner" aria-hidden="true"></span>
+      <span id="loaderMessage">Working...</span>
+    </div>
+  </div>
+
   <header>
     <div class="header-bar">
       <div class="brand">
@@ -226,11 +233,20 @@
           <p class="subtitle">Generate &bull; Print &bull; Scan &bull; Track &mdash; fully offline PWA</p>
         </div>
       </div>
+      <span id="syncStatusBadge" class="sync-status-badge hidden">
+        <span class="sync-dot" aria-hidden="true"></span>
+        <span id="syncStatusText">Offline</span>
+      </span>
       <button id="headerInstallBtn" class="header-install-btn" style="display: none;">
         Install App
       </button>
     </div>
   </header>
+
+  <div id="syncAlert" class="sync-alert hidden" role="alert">
+    <span id="syncAlertText"></span>
+    <button id="syncAlertDismiss" type="button" aria-label="Dismiss">&times;</button>
+  </div>
 
   <nav class="tabs">
     <button class="tab-btn active" data-tab="generator">Generate</button>
@@ -251,6 +267,9 @@
             </div>
             <button id="generateBtn" class="primary-btn">Generate Tickets</button>
           </div>
+          <p id="generationLockNotice" class="setting-desc hidden" style="color: var(--danger);">
+            Generation is locked because tickets were imported from CSV. Unlock it from Settings.
+          </p>
 
           <div class="action-buttons" aria-label="Print and export options">
             <button id="downloadSheetBtn" class="action-btn">Print Sheet</button>
@@ -258,6 +277,8 @@
             <button id="exportJSONBtn" class="action-btn">Export JSON (Sync)</button>
             <button id="importBtn" class="action-btn">Import JSON (Sync)</button>
             <input id="importFile" type="file" accept="application/json" class="hidden" aria-label="Import tickets JSON file" />
+            <button id="importCsvBtn" class="action-btn">Import CSV (Cloud)</button>
+            <input id="importCsvFile" type="file" accept=".csv" class="hidden" aria-label="Import tickets CSV file" />
           </div>
         </div>
       </div>
@@ -320,6 +341,37 @@
         </div>
       </div>
 
+      <div class="card" id="cloudSyncCard" style="display: none;">
+        <h2>Cloud Sync</h2>
+        <p class="card-subtitle">Keeps ticket status in sync across every device scanning at this event.</p>
+        <div class="settings-group">
+          <div class="setting-item">
+            <label>Status</label>
+            <p class="setting-desc" id="cloudSyncStatusLabel">Disabled</p>
+          </div>
+          <div class="setting-item">
+            <label>This device</label>
+            <p class="setting-desc" id="cloudSyncDeviceId">-</p>
+          </div>
+          <div class="setting-item">
+            <label>Last synced</label>
+            <p class="setting-desc" id="cloudSyncLastSync">Never</p>
+          </div>
+          <div class="setting-item">
+            <label>Pending changes</label>
+            <p class="setting-desc" id="cloudSyncPending">0</p>
+          </div>
+          <div class="setting-item">
+            <label>Remote totals</label>
+            <p class="setting-desc" id="cloudSyncTotals">--</p>
+          </div>
+          <div class="setting-item">
+            <p class="setting-desc" id="cloudSyncMode">Mode: Offline-first</p>
+            <button id="manualSyncBtn" class="primary-btn" disabled>Sync Now</button>
+          </div>
+        </div>
+      </div>
+
       <div class="card">
         <h2>Settings</h2>
         <div class="settings-group">
@@ -353,8 +405,9 @@
 
           <div class="setting-item">
             <label>Export Data</label>
-            <p class="setting-desc">Download all tickets as a CSV file for backup.</p>
+            <p class="setting-desc">Download all tickets as a CSV or JSON file for backup.</p>
             <button id="exportSettingsBtn">Export CSV</button>
+            <button id="exportJSONSettingsBtn">Export JSON</button>
           </div>
 
           <div class="setting-item">
@@ -393,6 +446,18 @@
       });
     }
 
+    function loadApp() {
+      const sync = document.createElement("script");
+      sync.src = "sync.js";
+      sync.onload = () => {
+        const app = document.createElement("script");
+        app.type = "module";
+        app.src = "main.js";
+        document.body.appendChild(app);
+      };
+      document.body.appendChild(sync);
+    }
+
     Promise.all([
       loadScriptLocalOrCdn("qrcode.min.js", "https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"),
       loadScriptLocalOrCdn("html5-qrcode.min.js", "https://unpkg.com/html5-qrcode/minified/html5-qrcode.min.js")
@@ -405,20 +470,16 @@
         const waitForQRCode = () => {
           retryCount += 1;
           if (typeof QRCode !== "undefined") {
-            console.log("QRCode found! Loading script.js");
-            const script = document.createElement("script");
-            script.src = "script.js";
-            document.body.appendChild(script);
+            console.log("QRCode found! Loading app");
+            loadApp();
             return;
           }
 
           if (retryCount < maxRetries) {
             setTimeout(waitForQRCode, 50);
           } else {
-            console.error("QRCode library not found after loading. Loading script.js anyway.");
-            const script = document.createElement("script");
-            script.src = "script.js";
-            document.body.appendChild(script);
+            console.error("QRCode library not found after loading. Loading app anyway.");
+            loadApp();
           }
         };
 
@@ -426,9 +487,7 @@
       })
       .catch(err => {
         console.error("Failed to load QR libraries", err);
-        const script = document.createElement("script");
-        script.src = "script.js";
-        document.body.appendChild(script);
+        loadApp();
       });
   </script>
 </body>

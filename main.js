@@ -70,10 +70,8 @@ async function bootstrap() {
   await migrateFromLocalStorage();
 
   state.settings = loadAppSettings(SETTINGS_DEFAULTS);
-  // const supabaseAvailable = typeof SupabaseSync !== "undefined";
-  // const autoSyncEnabled = parseBoolean(state.settings.autoSyncEnabled, false);
-  const supabaseAvailable = false; // Supabase disabled for local-only mode
-  const autoSyncEnabled = false;
+  const supabaseAvailable = typeof TicketSync !== "undefined";
+  const autoSyncEnabled = parseBoolean(state.settings.autoSyncEnabled, false);
 
   state.supabaseEnabled = supabaseAvailable;
   state.supabaseAutoSync = supabaseAvailable && autoSyncEnabled;
@@ -137,13 +135,7 @@ async function bootstrap() {
     eventId: EVENT_ID,
   });
 
-  // Supabase sync disabled: keep indicator in local-only state
-  // setupSupabaseListeners();
-  ui.updateSyncIndicator(state.supabaseStatus, false);
-  if (dom.manualSyncBtn) {
-    dom.manualSyncBtn.disabled = true;
-    dom.manualSyncBtn.title = "Cloud sync disabled in local-only mode";
-  }
+  setupSupabaseListeners();
 
   ui.updateGenerationLockUI(state.settings.generationLocked);
   ui.setGlobalLoading(false);
@@ -151,6 +143,9 @@ async function bootstrap() {
   if (dom.manualSyncBtn) {
     dom.manualSyncBtn.addEventListener("click", handleManualSync);
     dom.manualSyncBtn.disabled = !state.supabaseEnabled;
+  }
+  if (dom.syncAlertDismiss) {
+    dom.syncAlertDismiss.addEventListener("click", () => ui.hideSyncAlert());
   }
 }
 
@@ -191,27 +186,9 @@ function setGenerationLock(locked, { reason = "", propagate = true } = {}) {
   }
 }
 
-function createSupabaseBridge() {
-  // Supabase integration disabled; provide no-op implementations for local-only mode
-  return {
-    isEnabled: () => false,
-    enqueue() {},
-    enqueueControlTicket() {},
-    getDeviceId: () => "local-device",
-    fetchTickets: () => Promise.resolve([]),
-    fetchScansSince: () => Promise.resolve([]),
-    flushQueue: () => Promise.resolve(),
-    getLastSyncAt: () => null,
-    setLastSyncAt() {},
-    getStatus: () => ({ ...state.supabaseStatus }),
-    getPendingCount: () => 0,
-  };
-}
-
-/* Original Supabase bridge retained for reference:
 function createSupabaseBridge(options = {}) {
   const { force = false, autoFlush } = options;
-  const supabaseAvailable = typeof SupabaseSync !== "undefined";
+  const supabaseAvailable = typeof TicketSync !== "undefined";
   const enabled = () => {
     if (force) return supabaseAvailable;
     return state.supabaseEnabled && supabaseAvailable;
@@ -222,9 +199,9 @@ function createSupabaseBridge(options = {}) {
     isEnabled: enabled,
     enqueue(action) {
       if (!enabled()) return;
-      SupabaseSync.enqueue(action);
+      TicketSync.enqueue(action);
       if (shouldAutoFlush) {
-        SupabaseSync.flushQueue();
+        TicketSync.flushQueue();
       }
     },
     enqueueControlTicket(locked, reason = "") {
@@ -239,35 +216,34 @@ function createSupabaseBridge(options = {}) {
           updated_at: new Date().toISOString(),
         },
       };
-      SupabaseSync.enqueue({
+      TicketSync.enqueue({
         type: "createTicket",
         payload,
       });
       if (shouldAutoFlush) {
-        SupabaseSync.flushQueue();
+        TicketSync.flushQueue();
       }
     },
     getDeviceId() {
-      return supabaseAvailable ? SupabaseSync.getDeviceId() : "-";
+      return supabaseAvailable ? TicketSync.getDeviceId() : "-";
     },
-    fetchTickets: () => (enabled() ? SupabaseSync.fetchAllTickets() : Promise.resolve([])),
-    fetchScansSince: (ts) => (enabled() ? SupabaseSync.fetchTicketScansSince(ts) : Promise.resolve([])),
+    fetchTickets: () => (enabled() ? TicketSync.fetchAllTickets(EVENT_ID) : Promise.resolve([])),
+    fetchScansSince: (ts) => (enabled() ? TicketSync.fetchTicketScansSince(ts, EVENT_ID) : Promise.resolve([])),
     flushQueue: () => {
-      if (supabaseAvailable) return SupabaseSync.flushQueue();
+      if (supabaseAvailable) return TicketSync.flushQueue();
       return Promise.resolve();
     },
-    getLastSyncAt: () => (enabled() ? SupabaseSync.getLastSyncAt() : null),
+    getLastSyncAt: () => (enabled() ? TicketSync.getLastSyncAt() : null),
     setLastSyncAt: (ts) => {
-      if (enabled()) SupabaseSync.setLastSyncAt(ts);
+      if (enabled()) TicketSync.setLastSyncAt(ts);
     },
     getStatus: () => ({ ...state.supabaseStatus }),
-    getPendingCount: () => (supabaseAvailable ? SupabaseSync.getPendingCount() : 0),
+    getPendingCount: () => (supabaseAvailable ? TicketSync.getPendingCount() : 0),
   };
 }
-*/
 
 function setupSupabaseListeners() {
-  if (typeof SupabaseSync === "undefined" || !state.supabaseEnabled) {
+  if (typeof TicketSync === "undefined" || !state.supabaseEnabled) {
     ui.updateSyncIndicator(state.supabaseStatus, false);
     if (dom.manualSyncBtn) {
       dom.manualSyncBtn.disabled = true;
@@ -275,21 +251,21 @@ function setupSupabaseListeners() {
     return;
   }
 
-  SupabaseSync.init();
+  TicketSync.init();
 
   if (supabaseUnsubscribe) supabaseUnsubscribe();
-  supabaseUnsubscribe = SupabaseSync.onStatusChange((status) => {
+  supabaseUnsubscribe = TicketSync.onStatusChange((status) => {
     state.supabaseStatus = status;
     ui.updateSyncIndicator(status, state.supabaseAutoSync, {
       manualMode: !state.supabaseAutoSync,
-      getDeviceId: () => SupabaseSync.getDeviceId(),
-      getLastSyncAt: () => SupabaseSync.getLastSyncAt(),
+      getDeviceId: () => TicketSync.getDeviceId(),
+      getLastSyncAt: () => TicketSync.getLastSyncAt(),
       getTotals: () => state.supabaseAnalytics,
     });
   });
 
   if (supabaseErrorUnsubscribe) supabaseErrorUnsubscribe();
-  supabaseErrorUnsubscribe = SupabaseSync.onError((error) => {
+  supabaseErrorUnsubscribe = TicketSync.onError((error) => {
     if (!error) {
       ui.hideSyncAlert();
       return;
@@ -300,9 +276,9 @@ function setupSupabaseListeners() {
 
 async function initialSupabaseSync({ force = false } = {}) {
   if (!force) {
-    if (!state.supabaseEnabled || typeof SupabaseSync === "undefined") return;
+    if (!state.supabaseEnabled || typeof TicketSync === "undefined") return;
     if (!state.supabaseAutoSync) return;
-  } else if (typeof SupabaseSync === "undefined") {
+  } else if (typeof TicketSync === "undefined") {
     return;
   }
 
@@ -438,7 +414,7 @@ function applyRemoteScans(scans) {
 }
 
 async function handleManualSync() {
-  if (!state.supabaseEnabled || typeof SupabaseSync === "undefined") {
+  if (!state.supabaseEnabled || typeof TicketSync === "undefined") {
     alert("Cloud sync is not configured on this device.");
     return;
   }

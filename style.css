@@ -673,3 +673,152 @@ button.danger {
     font-size: 0.8rem;
   }
 }
+
+/* Cloud sync, loader, and empty-state UI */
+
+.global-loader {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  background: var(--surface-overlay);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.global-loader.hidden {
+  display: none;
+}
+
+.global-loader.show {
+  opacity: 1;
+}
+
+.global-loader-box {
+  background: white;
+  border-radius: 16px;
+  padding: 18px 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-weight: 600;
+  color: #222;
+  box-shadow: 0 18px 42px rgba(15, 23, 42, 0.28);
+}
+
+.inline-spinner {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 3px solid rgba(0, 123, 255, 0.25);
+  border-top-color: var(--brand);
+  display: inline-block;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.sync-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.18);
+  color: white;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.sync-status-badge.hidden {
+  display: none;
+}
+
+.sync-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--muted);
+}
+
+.sync-status-badge.online .sync-dot {
+  background: var(--success);
+}
+
+.sync-status-badge.syncing .sync-dot {
+  background: var(--warning);
+}
+
+.sync-status-badge.manual-mode .sync-dot {
+  background: var(--brand);
+}
+
+.sync-alert {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  margin: 12px 16px 0;
+  background: #fdecea;
+  color: var(--danger);
+  border: 1px solid rgba(220, 53, 69, 0.25);
+  border-radius: 12px;
+  font-size: 0.9rem;
+}
+
+.sync-alert.hidden {
+  display: none;
+}
+
+.sync-alert #syncAlertDismiss {
+  background: transparent;
+  border: none;
+  color: inherit;
+  font-size: 1.2rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 4px;
+}
+
+button.is-loading {
+  opacity: 0.75;
+  cursor: progress;
+}
+
+button.locked {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 40px 16px;
+  color: var(--muted);
+}
+
+.empty-state-icon {
+  font-size: 2.2rem;
+  margin-bottom: 8px;
+}
+
+.qr-status-banner {
+  grid-column: 1 / -1;
+  padding: 10px 14px;
+  margin-bottom: 12px;
+  background: #fff8e6;
+  color: #8a6300;
+  border: 1px solid rgba(243, 156, 18, 0.35);
+  border-radius: 10px;
+  font-size: 0.85rem;
+}
+
+.qr-error-state {
+  border-color: var(--danger) !important;
+}
