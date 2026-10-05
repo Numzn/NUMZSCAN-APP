@@ -5,3 +5,7 @@ node_modules
 *.md
 .env
 .env.local
+tests
+vitest.config.js
+package.json
+package-lock.json

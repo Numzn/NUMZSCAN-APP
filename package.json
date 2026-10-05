@@ -1,0 +1,13 @@
+{
+  "devDependencies": {
+    "jsdom": "^26.1.0",
+    "vitest": "^3.2.7"
+  },
+  "name": "numzscan-app",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest"
+  }
+}

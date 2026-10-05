@@ -35,3 +35,6 @@ api/npm-debug.log*
 *.pem
 *.pfx
 
+
+# root test tooling
+node_modules/
