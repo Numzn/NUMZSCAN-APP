@@ -41,6 +41,9 @@ app.get("/api/health", async (req, res) => {
 
 app.use("/api", ticketsRouter);
 
+const NOT_PUBLIC = /^\/(api|tests|node_modules)(\/|$)|^\/(Dockerfile|docker-compose\.yml|package(-lock)?\.json|vitest\.config\.js)$|\.md$/i;
+app.use((req, res, next) => (NOT_PUBLIC.test(req.path) ? res.sendStatus(404) : next()));
+
 app.use(express.static(FRONTEND_ROOT, { extensions: ["html"] }));
 
 app.use((err, req, res, next) => {
