@@ -6,6 +6,7 @@ import { can, roleOn, viewerOf } from "../../app/policy";
 import { PageHeader } from "../../components/PageHeader";
 import { Badge } from "../../components/Badge";
 import { QrPass } from "../credentials/QrPass";
+import { RegistrationAnswers } from "../registration/RegistrationAnswers";
 import { isCredentialToken } from "../credentials/pass";
 import { api, ApiError } from "../../services/api";
 import type { CampEvent, Credential, Group, Participant } from "../../services/types";
@@ -69,6 +70,7 @@ export function ParticipantDetailPage() {
   const role = roleOn(viewer, participant.eventId);
   const manager = can(viewer, "event.manage", participant.eventId);
   const issuer = can(viewer, "credential.issue", participant.eventId);
+  const seesRegistration = can(viewer, "event.registration.view", participant.eventId);
   const activeCredential = credentials.find((c) => c.status === "active") ?? null;
   const currentGroup = groups.find((g) => g.id === participant.groupId)?.name ?? null;
   const participantStatus = statusOf(PARTICIPANT_STATUS, participant.status);
@@ -135,6 +137,8 @@ export function ParticipantDetailPage() {
         <dt>Group</dt><dd>{currentGroup ?? "No group"}</dd>
         <dt>Your role</dt><dd>{role === "admin" ? "Administrator" : role === "event_manager" ? "Event manager" : role === "staff" ? "Staff" : "No role"}</dd>
       </dl>
+
+      {seesRegistration && <RegistrationAnswers participantId={participantId} />}
 
       {manager && (
         <div className="card toolbar">

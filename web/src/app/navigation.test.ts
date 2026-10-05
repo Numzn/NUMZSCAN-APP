@@ -32,7 +32,7 @@ describe("administrator navigation", () => {
   it("adds the event's operations and setup between the workspace and administration, inside an event", () => {
     const sections = nav(ADMIN_USER, [], { eventId: CAMP.id });
     expect(sections.map((s) => s.title)).toEqual(["Workspace", "Event operations", "Event setup", "Administration"]);
-    expect(labels(sections, "Event operations")).toEqual(["Overview", "Participants", "Groups"]);
+    expect(labels(sections, "Event operations")).toEqual(["Overview", "Participants", "Registration", "Groups"]);
     expect(labels(sections, "Event setup")).toEqual(["Access", "Settings"]);
   });
 });
@@ -48,7 +48,7 @@ describe("event manager navigation", () => {
   it("offers the operations and setup of the event it is inside, without Settings", () => {
     const sections = nav(MANAGER_USER, managerOfCamp, { eventId: CAMP.id });
     expect(sections.map((s) => s.title)).toEqual(["My events", "Event operations", "Event setup"]);
-    expect(labels(sections, "Event operations")).toEqual(["Overview", "Participants", "Groups"]);
+    expect(labels(sections, "Event operations")).toEqual(["Overview", "Participants", "Registration", "Groups"]);
     expect(labels(sections, "Event setup")).toEqual(["Access"]);
   });
 
@@ -78,7 +78,7 @@ describe("event manager navigation", () => {
 });
 
 describe("staff navigation", () => {
-  it("offers the operations of an event but not Access or Settings", () => {
+  it("offers the operations of an event but not Registration, Access or Settings", () => {
     const sections = nav(STAFF_USER, staffOfCamp, { eventId: CAMP.id });
     expect(labels(sections, "Event operations")).toEqual(["Overview", "Participants", "Groups"]);
     expect(sections.some((s) => s.title === "Event setup")).toBe(false);
@@ -113,7 +113,7 @@ describe("what the navigation offers", () => {
       nav(STAFF_USER, staffOfCamp, { eventId: CAMP.id }),
     ].flat();
     const offered = everything.flatMap((s) => s.items.map((i) => i.label));
-    for (const future of ["Registration", "Credentials", "Checkpoints", "Attendance", "Reports"]) {
+    for (const future of ["Credentials", "Checkpoints", "Attendance", "Reports"]) {
       expect(offered).not.toContain(future);
     }
   });

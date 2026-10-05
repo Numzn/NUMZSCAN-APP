@@ -12,6 +12,9 @@ import { ParticipantDetailPage } from "../features/participants/ParticipantDetai
 import { ParticipantsPage } from "../features/participants/ParticipantsPage";
 import { RegisterParticipantPage } from "../features/participants/RegisterParticipantPage";
 import { AccessPage } from "../features/access/AccessPage";
+import { FormBuilderPage } from "../features/registration/FormBuilderPage";
+import { PublicRegistrationPage } from "../features/registration/PublicRegistrationPage";
+import { RegistrationPage } from "../features/registration/RegistrationPage";
 import { AdminLayout } from "../features/admin/AdminLayout";
 import { AdminRoute } from "../features/admin/AdminRoute";
 import { AuditPage } from "../features/admin/AuditPage";
@@ -29,6 +32,8 @@ export function App() {
       <AuthProvider>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
+          {/* Public: no sign-in and no application shell. The people who register are not EventPass users. */}
+          <Route path="/r/:slug" element={<PublicRegistrationPage />} />
           <Route
             element={
               <RequireAuth>
@@ -43,6 +48,8 @@ export function App() {
               <Route index element={<EventDetailPage />} />
               <Route path="participants" element={<ParticipantsPage />} />
               <Route path="participants/new" element={<RegisterParticipantPage />} />
+              <Route path="registration" element={<RegistrationPage />} />
+              <Route path="registration/form" element={<FormBuilderPage />} />
               <Route path="groups" element={<GroupsPage />} />
               <Route path="access" element={<AccessPage />} />
             </Route>

@@ -46,6 +46,16 @@ describe("can", () => {
     expect(can(staffOfA, "participant.register", EVENT_A)).toBe(false);
   });
 
+  it("lets event managers and administrators configure registration, and keeps it from staff and outsiders", () => {
+    expect(can(managerOfA, "event.registration.view", EVENT_A)).toBe(true);
+    expect(can(managerOfA, "event.registration.manage", EVENT_A)).toBe(true);
+    expect(can(managerOfA, "event.registration.manage", EVENT_B)).toBe(false);
+    expect(can(admin, "event.registration.manage", EVENT_B)).toBe(true);
+    expect(can(staffOfA, "event.registration.view", EVENT_A)).toBe(false);
+    expect(can(staffOfA, "event.registration.manage", EVENT_A)).toBe(false);
+    expect(can({ user: STAFF, memberships: [] }, "event.registration.view", EVENT_A)).toBe(false);
+  });
+
   it("lets administrators change access on any event", () => {
     expect(can(admin, "event.access.change", EVENT_A)).toBe(true);
     expect(can(admin, "event.manage", EVENT_B)).toBe(true);

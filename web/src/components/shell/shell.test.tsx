@@ -106,9 +106,9 @@ describe("event manager workspace", () => {
     expect(within(nav).getByRole("link", { name: "Groups" })).toHaveAttribute("aria-current", "page");
     expect(within(nav).getByRole("link", { name: "Youth Camp" })).toHaveAttribute("aria-current", "true");
     expect(within(nav).getByRole("link", { name: "Access" })).toBeInTheDocument();
+    expect(within(nav).getByRole("link", { name: "Registration" })).toBeInTheDocument();
     expect(within(nav).queryByRole("link", { name: "Settings" })).toBeNull();
     expect(within(nav).queryByRole("link", { name: "Credentials" })).toBeNull();
-    expect(within(nav).queryByRole("link", { name: "Registration" })).toBeNull();
   });
 
   it("offers an event's operations from its address, even before the event list has loaded it", async () => {

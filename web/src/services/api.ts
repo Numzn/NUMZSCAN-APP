@@ -1,6 +1,12 @@
 import type {
   AccessRow,
   AdminUser,
+  Confirmation,
+  FormField,
+  PublicRegistration,
+  RegistrationFieldType,
+  RegistrationSubmissionView,
+  RegistrationSummary,
   AdminUserDetail,
   AuditEntry,
   CampEvent,
@@ -139,6 +145,31 @@ export const api = {
     request<{ credential: Credential }>("POST", `/credentials/${enc(credentialId)}/revoke`, {}),
 
   // Administrator area
+  registration: (eventId: string) =>
+    request<{ registration: RegistrationSummary | null }>("GET", `/events/${enc(eventId)}/registration`),
+  createRegistration: (eventId: string) =>
+    request<{ registration: RegistrationSummary }>("POST", `/events/${enc(eventId)}/registration`, {}),
+  changeRegistrationLink: (eventId: string, slug: string) =>
+    request<{ registration: RegistrationSummary }>("PATCH", `/events/${enc(eventId)}/registration`, { slug }),
+  publishRegistration: (eventId: string) =>
+    request<{ registration: RegistrationSummary }>("POST", `/events/${enc(eventId)}/registration/publish`, {}),
+  closeRegistration: (eventId: string) =>
+    request<{ registration: RegistrationSummary }>("POST", `/events/${enc(eventId)}/registration/close`, {}),
+  registrationForm: (eventId: string) => request<{ fields: FormField[] }>("GET", `/events/${enc(eventId)}/registration/form`),
+  addRegistrationField: (eventId: string, body: { label: string; type: RegistrationFieldType; required: boolean; section: string | null; options: string[] | null }) =>
+    request<{ field: FormField }>("POST", `/events/${enc(eventId)}/registration/form/fields`, body),
+  updateRegistrationField: (eventId: string, fieldId: string, body: Partial<Omit<FormField, "id" | "key" | "personField" | "position">>) =>
+    request<{ field: FormField }>("PATCH", `/events/${enc(eventId)}/registration/form/fields/${enc(fieldId)}`, body),
+  removeRegistrationField: (eventId: string, fieldId: string) =>
+    request<{ field: FormField }>("DELETE", `/events/${enc(eventId)}/registration/form/fields/${enc(fieldId)}`),
+  reorderRegistrationFields: (eventId: string, fieldOrder: string[]) =>
+    request<{ fields: FormField[] }>("PATCH", `/events/${enc(eventId)}/registration/form`, { fieldOrder }),
+  registrationAnswers: (participantId: string) =>
+    request<{ submission: RegistrationSubmissionView | null }>("GET", `/event-participants/${enc(participantId)}/registration`),
+  publicRegistration: (slug: string) => request<PublicRegistration>("GET", `/public/registration/${enc(slug)}`),
+  submitPublicRegistration: (slug: string, body: { submissionId: string; answers: Record<string, string | boolean> }) =>
+    request<{ confirmation: Confirmation }>("POST", `/public/registration/${enc(slug)}`, body),
+
   adminOverview: () => request<{ overview: Overview }>("GET", "/admin/overview"),
   adminListUsers: (params: UserListQuery = {}) =>
     request<{ users: AdminUser[]; total: number }>("GET", `/admin/users${query({ ...params })}`),

@@ -1,0 +1,70 @@
+/* Registration: the manager's pages and the public registration surface. Public pages get their own layout. */
+
+/* ----- Manager ---------------------------------------------------------------------------------------------------- */
+.registration-grid { display: grid; gap: var(--space-5); min-width: 0; }
+.link-text { margin: 0; font-weight: var(--weight-semibold); overflow-wrap: anywhere; }
+.address-form { margin-top: var(--space-2); }
+.qr-box {
+  display: grid; place-items: center; width: fit-content; padding: var(--space-4);
+  background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-card);
+}
+
+.form-section { display: grid; gap: var(--space-3); min-width: 0; }
+.form-section h2 { margin-top: var(--space-4); }
+.field-list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-2); }
+.field-row {
+  display: grid; gap: var(--space-3); padding: var(--space-3) var(--space-4); min-width: 0;
+  background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-card);
+}
+.field-row-main { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-2) var(--space-4); min-width: 0; }
+.confirm-row {
+  display: grid; gap: var(--space-3); padding: var(--space-3) var(--space-4);
+  background: var(--color-warning-soft); border-radius: var(--radius-control);
+}
+.confirm-row p { margin: 0; }
+.field-editor { margin-top: var(--space-5); padding: var(--space-5); background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-card); }
+.field-error { margin: 0; color: var(--color-danger); font-size: var(--text-helper); font-weight: var(--weight-semibold); }
+.answer-row { display: contents; }
+
+/* ----- Public registration ---------------------------------------------------------------------------------------- */
+.public-page { min-height: 100vh; background: var(--color-background); }
+.public-header {
+  display: flex; align-items: center; min-height: var(--topbar-height); padding: 0 var(--space-5);
+  background: var(--color-surface); border-bottom: 1px solid var(--color-border);
+}
+.public-brand { font-size: 17px; font-weight: var(--weight-bold); color: var(--color-primary); }
+.public-main {
+  display: grid; gap: var(--space-5); width: 100%; max-width: 36rem; min-width: 0;
+  margin: 0 auto; padding: var(--space-6) var(--space-5) var(--space-12);
+}
+.public-main:focus { outline: none; }
+.public-event { display: grid; gap: var(--space-1); }
+.public-eyebrow { margin: 0; font-size: 13px; font-weight: var(--weight-semibold); letter-spacing: 0.06em; text-transform: uppercase; color: var(--color-primary); }
+.public-event-name { margin: 0; font-size: var(--text-section); font-weight: var(--weight-bold); }
+.public-thanks { margin: 0; font-size: var(--text-section); font-weight: var(--weight-bold); }
+.public-form { display: grid; gap: var(--space-5); min-width: 0; }
+.public-section {
+  display: grid; gap: var(--space-4); min-width: 0; margin: 0; padding: var(--space-5);
+  background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-card);
+}
+.public-section-title { margin: 0; font-size: var(--text-card-title); font-weight: 650; }
+.public-field { display: grid; gap: var(--space-2); min-width: 0; border: 0; margin: 0; padding: 0; }
+.public-field > label { display: block; }
+.public-radio legend { font-size: var(--text-label); font-weight: var(--weight-semibold); }
+.public-check { display: flex; align-items: flex-start; gap: var(--space-3); font-weight: var(--weight-regular); }
+.public-check input { margin-top: 3px; }
+.public-check input[type="radio"] { width: 20px; min-height: 20px; height: 20px; }
+.public-field input, .public-field select, .public-field textarea { min-height: 48px; font-size: 16px; }
+.public-field textarea { min-height: 96px; }
+.public-submit { width: 100%; min-height: 52px; font-size: 16px; }
+.public-reference {
+  margin: 0; font-family: var(--font-mono); font-size: 28px; font-weight: var(--weight-bold); letter-spacing: 0.08em;
+  color: var(--color-text); overflow-wrap: anywhere;
+}
+
+@media (max-width: 767px) {
+  .public-header { padding: 0 var(--space-4); }
+  .public-main { padding: var(--space-5) var(--space-4) var(--space-10); }
+  .public-section { padding: var(--space-4); }
+  .row-actions .btn-ghost, .row-actions .btn-secondary, .row-actions .btn-danger, .row-actions button, .row-actions a { min-height: 40px; }
+}

@@ -31,3 +31,9 @@ export const GROUP_KIND: Record<string, string> = {
 export function statusOf(table: Record<string, { label: string; tone: Tone }>, code: string) {
   return table[code] ?? { label: code, tone: "grey" as Tone };
 }
+
+export const REGISTRATION_STATUS: Record<string, { label: string; tone: Tone }> = {
+  draft: { label: "Draft", tone: "grey" },
+  open: { label: "Open", tone: "green" },
+  closed: { label: "Closed", tone: "amber" },
+};

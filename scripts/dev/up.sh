@@ -97,7 +97,8 @@ start() {
 
 # The API runs from api/, which has no .env, so the production file is never loaded.
 # Local only: a higher sign-in limit so repeated test sign-ins are not refused. Production keeps its default.
-start api api "$API_PORT" env PORT="$API_PORT" HOST=127.0.0.1 EVENTPASS_COOKIE_SECURE=false EVENTPASS_LOGIN_LIMIT=1000 node --watch src/server.js
+# The public address is the web app's own address, so registration links and QR codes point at the dev web server.
+start api api "$API_PORT" env PORT="$API_PORT" HOST=127.0.0.1 EVENTPASS_COOKIE_SECURE=false EVENTPASS_LOGIN_LIMIT=1000 EVENTPASS_PUBLIC_URL="http://127.0.0.1:$WEB_PORT" node --watch src/server.js
 start web web "$WEB_PORT" env EVENTPASS_API="http://127.0.0.1:$API_PORT" node node_modules/vite/bin/vite.js --host 127.0.0.1 --port "$WEB_PORT" --strictPort
 
 for _ in $(seq 1 60); do

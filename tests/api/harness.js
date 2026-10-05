@@ -25,6 +25,8 @@ export const config = {
   sessionTtlHours: 12,
   loginLimitPer15Min: 100000,
   apiLimitPerMinute: 100000,
+  publicRegistrationLimitPerMinute: 100000,
+  publicUrl: "https://events.test",
   cookieSecure: true,
 };
 
@@ -37,8 +39,9 @@ export async function resetDatabase() {
   return pool;
 }
 
-export function startServer(pool) {
-  const app = createApp({ pool, config });
+// Overrides let one suite run the server with a different limit or public address.
+export function startServer(pool, overrides = {}) {
+  const app = createApp({ pool, config: { ...config, ...overrides } });
   return new Promise((resolve) => {
     const server = app.listen(0, "127.0.0.1", () => {
       resolve({ server, base: `http://127.0.0.1:${server.address().port}` });

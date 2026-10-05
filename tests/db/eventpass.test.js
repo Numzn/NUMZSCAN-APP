@@ -157,7 +157,11 @@ describe.skipIf(!url)("EventPass v2 schema", () => {
     it("is idempotent: applying again changes nothing", async () => {
       await applyMigrations(url);
       const { rows } = await pool.query("select name from schema_migrations order by name");
-      expect(rows.map((r) => r.name)).toEqual(["0001_eventpass_v2.sql", "0002_identity_and_access.sql"]);
+      expect(rows.map((r) => r.name)).toEqual([
+        "0001_eventpass_v2.sql",
+        "0002_identity_and_access.sql",
+        "0003_registration.sql",
+      ]);
     });
 
     it("leaves the legacy ticket tables in place", async () => {

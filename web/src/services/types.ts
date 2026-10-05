@@ -119,3 +119,78 @@ export interface Overview {
   openEvents: number;
   changesLast7Days: number;
 }
+
+export type RegistrationStatus = "draft" | "open" | "closed";
+
+export type RegistrationFieldType =
+  | "text"
+  | "email"
+  | "phone"
+  | "number"
+  | "date"
+  | "dropdown"
+  | "radio"
+  | "checkbox"
+  | "long_text";
+
+// The event's registration as the manager sees it. publicUrl is null when the server has no public address set.
+export interface RegistrationSummary {
+  status: RegistrationStatus;
+  slug: string;
+  publicUrl: string | null;
+  fieldCount: number;
+  openedAt: string | null;
+  closedAt: string | null;
+  updatedAt: string;
+}
+
+export interface FormField {
+  id: string;
+  key: string;
+  label: string;
+  type: RegistrationFieldType;
+  required: boolean;
+  section: string | null;
+  options: string[] | null;
+  personField: "first_name" | "last_name" | "phone" | null;
+  position: number;
+}
+
+// A field as a public registrant sees it. It carries no id.
+export interface PublicField {
+  key: string;
+  label: string;
+  type: RegistrationFieldType;
+  required: boolean;
+  section: string | null;
+  options: string[] | null;
+}
+
+export interface PublicRegistration {
+  event: { name: string; startsOn: string; endsOn: string; timezone: string };
+  registration: { status: RegistrationStatus; fields: PublicField[] };
+}
+
+export interface Confirmation {
+  reference: string;
+  firstName: string;
+  eventName: string;
+  startsOn: string;
+  endsOn: string;
+  timezone: string;
+}
+
+// The answers one participant gave on their registration, for a manager.
+export interface RegistrationAnswer {
+  key: string;
+  label: string;
+  type: RegistrationFieldType;
+  value: string;
+}
+
+export interface RegistrationSubmissionView {
+  reference: string;
+  submittedAt: string;
+  identityMatch: "new" | "reused" | "ambiguous";
+  answers: RegistrationAnswer[];
+}

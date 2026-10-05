@@ -24,6 +24,8 @@ EventPass
 │       ├── Overview            /events/:eventId                  (index: totals and role)
 │       ├── Participants        /events/:eventId/participants
 │       │   └── Register        /events/:eventId/participants/new (managers)
+│       ├── Registration        /events/:eventId/registration     (managers: status, link, QR)
+│       │   └── Form            /events/:eventId/registration/form (managers: the questions)
 │       ├── Groups              /events/:eventId/groups
 │       ├── Access              /events/:eventId/access           (managers view, administrators change)
 │       └── Settings            /admin/events/:eventId            (administrators)
@@ -40,6 +42,9 @@ EventPass
 
 Sign-in (`/login`) sits outside the app shell and has no navigation.
 
+The public registration page, `/r/:slug`, is outside the app shell too. It has no sign-in and no navigation: it is
+a public surface for people who are not EventPass users. See `docs/design/registration.md`.
+
 ## Shells
 
 A shell is a layout route. It owns navigation, and its children own content.
@@ -50,6 +55,7 @@ A shell is a layout route. It owns navigation, and its children own content.
 | **Event shell** | `/events/:eventId/*` | Breadcrumbs (Events, event name), the event's name, dates, and status. The event's sections are in the sidebar, not repeated as tabs. |
 | **Admin shell** | `/admin/*` | The app sidebar's Administration section: Overview, Users, Manage events, Audit log. A drawer on a phone. |
 | **Auth shell** | `/login` | Centred card, no navigation |
+| **Public shell** | `/r/:slug` | EventPass brand only, a single column, no navigation (registration) |
 
 The sidebar shows only the event sections the viewer may use. Access is hidden from staff, and Settings is hidden from everyone but administrators. Sections are defined once, in `app/navigation.ts`.
 
@@ -97,6 +103,8 @@ All UI permission checks go through `app/policy.ts`. Pages never compare roles t
 | `event.access.change` | Administrators |
 | `participant.register` | Administrators, and event managers of that event |
 | `credential.issue` | Administrators, and anyone with access to the event (staff included) |
+| `event.registration.view` | Administrators, and event managers of that event |
+| `event.registration.manage` | Administrators, and event managers of that event |
 
 The server enforces each of these. A capability the screen hides is still refused by the API if it is requested directly.
 

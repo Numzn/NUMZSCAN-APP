@@ -14,7 +14,9 @@ export type Capability =
   | "event.access.view"
   | "event.access.change"
   | "participant.register"
-  | "credential.issue";
+  | "credential.issue"
+  | "event.registration.view"
+  | "event.registration.manage";
 
 export interface Viewer {
   user: User;
@@ -49,6 +51,9 @@ export function can(viewer: Viewer | null, capability: Capability, eventId?: str
     case "event.manage":
     case "event.access.view":
     case "participant.register":
+    // Registration holds personal answers and sets the public form, so only managers and administrators see it.
+    case "event.registration.view":
+    case "event.registration.manage":
       return role !== null && CAN_MANAGE_EVENT.has(role);
   }
 }

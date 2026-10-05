@@ -10,6 +10,7 @@ import { devicesRouter } from "./routes/devices.js";
 import { eventsRouter } from "./routes/events.js";
 import { interactionsRouter } from "./routes/interactions.js";
 import { participantsRouter } from "./routes/participants.js";
+import { publicRegistrationRouter, registrationRouter } from "./routes/registration.js";
 import { v1ErrorHandler } from "./errors.js";
 import { ApiError } from "./security.js";
 
@@ -55,6 +56,8 @@ export function createV1Router({ pool, config }) {
   router.use(eventsRouter({ pool }));
   router.use(membershipsRouter({ pool }));
   router.use(participantsRouter({ pool }));
+  router.use(registrationRouter({ pool, config }));
+  router.use(publicRegistrationRouter({ pool, config }));
   router.use(credentialsRouter({ pool, config }));
   router.use(checkpointsRouter({ pool }));
   router.use(devicesRouter({ pool, config }));

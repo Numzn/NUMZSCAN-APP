@@ -98,8 +98,11 @@ function eventSections(viewer: Viewer, eventId: string): NavSection[] {
   const operations: NavItem[] = [
     { to: base, label: "Overview", match: (p) => p === base },
     { to: `${base}/participants`, label: "Participants", match: (p) => p.startsWith(`${base}/participants`) },
-    { to: `${base}/groups`, label: "Groups", match: (p) => p.startsWith(`${base}/groups`) },
   ];
+  if (can(viewer, "event.registration.view", eventId)) {
+    operations.push({ to: `${base}/registration`, label: "Registration", match: (p) => p.startsWith(`${base}/registration`) });
+  }
+  operations.push({ to: `${base}/groups`, label: "Groups", match: (p) => p.startsWith(`${base}/groups`) });
   const setup: NavItem[] = [];
   if (can(viewer, "event.access.view", eventId)) {
     setup.push({ to: `${base}/access`, label: "Access", match: (p) => p === `${base}/access` });
