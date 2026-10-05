@@ -17,6 +17,7 @@ export function Layout() {
         <Link to="/" className="brand">EventPass</Link>
         <nav>
           <Link to="/">Events</Link>
+          {state.status === "signed-in" && state.user.isAdmin && <Link to="/events/new">New event</Link>}
         </nav>
         <div className="account">
           <span>{displayName}</span>

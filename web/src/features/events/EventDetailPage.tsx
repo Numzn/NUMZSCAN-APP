@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { useAuth } from "../../app/AuthContext";
 import { api, ApiError } from "../../services/api";
 import type { CampEvent, EventMembershipRole } from "../../services/types";
@@ -55,6 +55,10 @@ export function EventDetailPage() {
         <dt>Your role</dt>
         <dd>{yourRole}</dd>
       </dl>
+      <nav className="subnav" aria-label="Event sections">
+        <Link to={`/events/${event.id}/participants`}>Participants</Link>
+        <Link to={`/events/${event.id}/groups`}>Groups</Link>
+      </nav>
     </section>
   );
 }

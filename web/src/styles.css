@@ -5,9 +5,11 @@
   background: #f4f6f8;
 }
 body { margin: 0; }
-.topbar { display: flex; align-items: center; gap: 1.5rem; padding: 0.75rem 1.5rem; background: #1f4d3a; color: #fff; }
+.topbar { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 1.5rem; padding: 0.75rem 1.5rem; background: #1f4d3a; color: #fff; }
+.topbar a, .topbar button, .topbar span { white-space: nowrap; }
 .topbar a { color: #fff; text-decoration: none; }
 .topbar .brand { font-weight: 700; }
+.topbar nav { display: flex; gap: 1rem; }
 .topbar .account { margin-left: auto; display: flex; gap: 0.75rem; align-items: center; }
 main { max-width: 52rem; margin: 2rem auto; padding: 0 1rem; background: #fff; border-radius: 8px; padding: 1.5rem; }
 button { padding: 0.45rem 0.9rem; border: 0; border-radius: 6px; background: #1f4d3a; color: #fff; cursor: pointer; }
@@ -25,3 +27,23 @@ input { padding: 0.5rem; border: 1px solid #c4cdd6; border-radius: 6px; font-siz
 .facts dd { margin: 0; }
 .event-list a { color: #1f4d3a; font-weight: 600; }
 .event-list a:hover { text-decoration: underline; }
+.subnav { display: flex; gap: 1rem; margin-top: 1.25rem; }
+.subnav a, .plain-list a, .table a { color: #1f4d3a; font-weight: 600; }
+.plain-list { list-style: none; padding: 0; }
+.plain-list li { padding: 0.5rem 0; border-bottom: 1px solid #e3e8ee; display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; }
+.table { width: 100%; border-collapse: collapse; }
+.table th, .table td { text-align: left; padding: 0.6rem 0.5rem; border-bottom: 1px solid #e3e8ee; }
+.form { display: grid; gap: 0.25rem; max-width: 32rem; margin-top: 1rem; }
+.form.inline { grid-template-columns: 1fr auto; align-items: end; max-width: none; }
+.notice { color: #1f4d3a; font-weight: 600; }
+select { padding: 0.5rem; border: 1px solid #c4cdd6; border-radius: 6px; font-size: 1rem; }
+.pass { margin-top: 1.5rem; padding: 1.25rem; border: 2px dashed #1f4d3a; border-radius: 10px; display: grid; justify-items: start; gap: 0.35rem; max-width: 22rem; background: #fff; }
+.pass-event { margin: 0; font-size: 0.85rem; color: #5c6b7a; text-transform: uppercase; letter-spacing: 0.06em; }
+.pass-name { margin: 0; font-size: 1.4rem; font-weight: 700; }
+.pass-group { margin: 0; color: #5c6b7a; }
+.pass-note { margin: 0; font-size: 0.8rem; color: #5c6b7a; }
+@media print {
+  .no-print, .topbar, .subnav, nav, .form, .plain-list { display: none !important; }
+  body, main { background: #fff; box-shadow: none; margin: 0; max-width: none; padding: 0; }
+  .pass { border: 1px solid #000; break-inside: avoid; }
+}
