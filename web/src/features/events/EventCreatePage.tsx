@@ -4,6 +4,24 @@ import { useAuth } from "../../app/AuthContext";
 import { api, ApiError } from "../../services/api";
 import { slugify } from "./slug";
 
+// The server names fields by their API keys. The form shows the labels the user sees.
+const FIELD_LABELS: Record<string, string> = {
+  slug: "Web address",
+  name: "Name",
+  kind: "Kind",
+  timezone: "Timezone",
+  startsOn: "Starts on",
+  endsOn: "Ends on",
+};
+
+function describeError(err: unknown): string {
+  if (!(err instanceof ApiError)) return "Could not create the event.";
+  const details = Array.isArray(err.details) ? (err.details as { path?: string; message?: string }[]) : [];
+  if (details.length === 0) return err.message;
+  const problems = details.map((d) => `${FIELD_LABELS[d.path ?? ""] ?? d.path ?? "Form"}: ${d.message ?? "is not valid"}`);
+  return `${err.message}. ${problems.join(". ")}.`;
+}
+
 export function EventCreatePage() {
   const { state } = useAuth();
   const navigate = useNavigate();
@@ -30,12 +48,16 @@ export function EventCreatePage() {
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
+    if (endsOn < startsOn) {
+      setError("Ends on must not be before Starts on.");
+      return;
+    }
     setSubmitting(true);
     try {
       const { event: created } = await api.createEvent({ slug, name: name.trim(), kind, timezone: timezone.trim(), startsOn, endsOn });
       navigate(`/events/${created.id}`);
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Could not create the event.");
+      setError(describeError(err));
     } finally {
       setSubmitting(false);
     }
@@ -53,6 +75,8 @@ export function EventCreatePage() {
           Web address (slug)
           <input
             required
+            minLength={3}
+            maxLength={60}
             pattern="[a-z0-9]+(-[a-z0-9]+)*"
             value={slug}
             onChange={(e) => {

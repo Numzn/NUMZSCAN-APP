@@ -68,4 +68,25 @@ describe("EventCreatePage", () => {
     await userEvent.click(screen.getByRole("button", { name: "Create event" }));
     expect(await screen.findByRole("alert")).toHaveTextContent("An event with this slug already exists");
   });
+
+  it("names the field the server rejected, using the label the form shows", async () => {
+    mocked.createEvent.mockRejectedValueOnce(
+      new ApiError(400, "INVALID_INPUT", "Request is invalid", [{ path: "slug", message: "String must contain at least 3 character(s)" }])
+    );
+    renderAs(<EventCreatePage />, { user: ADMIN, path: "/events/new", route: "/events/new" });
+    await userEvent.type(await screen.findByLabelText("Name"), "Camp");
+    await fillDates();
+    await userEvent.click(screen.getByRole("button", { name: "Create event" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("Request is invalid. Web address: String must contain at least 3 character(s).");
+  });
+
+  it("refuses an end date before the start date without sending the request", async () => {
+    renderAs(<EventCreatePage />, { user: ADMIN, path: "/events/new", route: "/events/new" });
+    await userEvent.type(await screen.findByLabelText("Name"), "Camp");
+    fireEvent.change(screen.getByLabelText("Starts on"), { target: { value: "2027-12-05" } });
+    fireEvent.change(screen.getByLabelText("Ends on"), { target: { value: "2027-12-01" } });
+    await userEvent.click(screen.getByRole("button", { name: "Create event" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("Ends on must not be before Starts on.");
+    expect(mocked.createEvent).not.toHaveBeenCalled();
+  });
 });
