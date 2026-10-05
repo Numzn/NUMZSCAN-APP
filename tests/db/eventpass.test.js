@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 import pg from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { applyMigrations } from "../../api/scripts/migrate.js";
+import { assertTestDatabase } from "../api/harness.js";
 
 // Runs against a scratch database only. Set TEST_DATABASE_URL to enable; the
 // suite is skipped otherwise. The schema is dropped and rebuilt on every run.
@@ -23,6 +24,7 @@ describe.skipIf(!url)("EventPass v2 schema", () => {
   let pool;
 
   beforeAll(async () => {
+    assertTestDatabase(url);
     pool = new pg.Pool({ connectionString: url, max: 10 });
     await pool.query("drop schema public cascade; create schema public;");
     const legacy = await readFile(path.join(here, "../../api/src/schema.sql"), "utf8");

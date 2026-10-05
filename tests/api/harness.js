@@ -8,6 +8,15 @@ import { createApp } from "../../api/src/app.js";
 import { hashPassword } from "../../api/src/v1/security.js";
 
 export const TEST_URL = process.env.TEST_DATABASE_URL;
+
+// These suites drop and recreate the whole public schema. Refuse any database
+// whose name is not a test database, so a mistaken URL cannot reach real data.
+export function assertTestDatabase(url) {
+  const name = new URL(url).pathname.replace(/^\//, "");
+  if (!/_test$/.test(name)) {
+    throw new Error(`refusing to reset database "${name}": the name must end in _test`);
+  }
+}
 const here = path.dirname(fileURLToPath(import.meta.url));
 
 // Generated per run. Never a real key.
@@ -20,6 +29,7 @@ export const config = {
 };
 
 export async function resetDatabase() {
+  assertTestDatabase(TEST_URL);
   const pool = new pg.Pool({ connectionString: TEST_URL, max: 10 });
   await pool.query("drop schema public cascade; create schema public;");
   await pool.query(await readFile(path.join(here, "../../api/src/schema.sql"), "utf8"));
