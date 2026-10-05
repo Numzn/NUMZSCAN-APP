@@ -191,31 +191,43 @@ describe("remote reads", () => {
   });
 });
 
-describe("known issues (current behaviour, to be fixed deliberately)", () => {
-  // KNOWN ISSUE: flushQueue records lastSync and clears the error even when items
-  // failed, because the success bookkeeping runs after the loop regardless of outcome.
-  it("clears the error and records lastSync even though an item failed", async () => {
+describe("regressions: failed flushes and queue loading", () => {
+  it("a flush with a failed item does not record lastSync and keeps the error", async () => {
     fetchMock.mockResolvedValue({ ok: false, status: 500, text: async () => "", json: async () => ({}) });
     const errors = [];
     const unsubscribe = TicketSync.onError((e) => errors.push(e ? e.message : null));
     TicketSync.enqueue({ type: "createTicket", payload: { id: "K1" } });
     await TicketSync.flushQueue();
-    expect(errors).toContain(null);
-    expect(errors[errors.length - 1]).toBeNull();
-    expect(TicketSync.getLastSyncAt()).toBeTruthy();
+    expect(errors[errors.length - 1]).toContain("API error 500");
+    expect(TicketSync.getLastSyncAt()).toBeNull();
+    expect(storage.get(LAST_SYNC_KEY)).toBeUndefined();
     unsubscribe();
   });
 
-  // KNOWN ISSUE: enqueue persists the in-memory queue, which is only loaded by init().
-  // Enqueuing before init() therefore overwrites the persisted queue from a previous session.
-  it("enqueue before init() overwrites the persisted queue", async () => {
-    storage.set("numzscanSyncQueue", JSON.stringify([{ id: "OLD", type: "createTicket", payload: {}, retries: 0 }]));
+  it("a later successful retry records lastSync and clears the error", async () => {
+    fetchMock.mockResolvedValueOnce({ ok: false, status: 500, text: async () => "", json: async () => ({}) });
+    const errors = [];
+    const unsubscribe = TicketSync.onError((e) => errors.push(e ? e.message : null));
+    TicketSync.enqueue({ type: "createTicket", payload: { id: "K2" } });
+    await TicketSync.flushQueue();
+    expect(TicketSync.getLastSyncAt()).toBeNull();
+    await vi.advanceTimersByTimeAsync(4000);
+    expect(TicketSync.getPendingCount()).toBe(0);
+    expect(TicketSync.getLastSyncAt()).toBeTruthy();
+    expect(errors[errors.length - 1]).toBeNull();
+    unsubscribe();
+  });
+
+  it("enqueue before init() keeps previously persisted queue items", async () => {
+    storage.set(QUEUE_KEY, JSON.stringify([{ id: "OLD", type: "createTicket", payload: { id: "OLD" }, retries: 0 }]));
     vi.resetModules();
     delete globalThis.TicketSync;
     await import("../sync.js");
     const fresh = globalThis.TicketSync;
+    expect(fresh.getPendingCount()).toBe(1);
     fresh.enqueue({ type: "createTicket", payload: { id: "NEW" } });
-    const persisted = JSON.parse(storage.get("numzscanSyncQueue"));
-    expect(persisted.map((i) => i.payload.id)).toEqual(["NEW"]);
+    const persisted = JSON.parse(storage.get(QUEUE_KEY));
+    expect(persisted.map((i) => i.payload.id)).toEqual(["OLD", "NEW"]);
+    expect(fresh.getPendingCount()).toBe(2);
   });
 });

@@ -180,11 +180,13 @@
     notify();
 
     try {
+      let anyFailed = false;
       for (const item of [...state.queue]) {
         try {
           await handleQueueItem(item);
           removeFromQueue(item.id);
         } catch (error) {
+          anyFailed = true;
           console.error("[TicketSync] Failed to sync queue item", item, error);
           notifyError(error);
           item.retries += 1;
@@ -196,8 +198,10 @@
           }
         }
       }
-      persistLastSync(new Date().toISOString());
-      notifyError(null);
+      if (!anyFailed) {
+        persistLastSync(new Date().toISOString());
+        notifyError(null);
+      }
     } finally {
       state.syncing = false;
       persistQueue();
@@ -220,10 +224,11 @@
     return Array.isArray(result) ? result : [];
   }
 
+  loadQueue();
+  loadLastSync();
+
   function init() {
     ensureDeviceId();
-    loadQueue();
-    loadLastSync();
     notify();
 
     window.addEventListener("online", () => {
