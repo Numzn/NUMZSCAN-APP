@@ -53,6 +53,7 @@ export function ParticipantsPage() {
     <section>
       <PageHeader
         title="Participants"
+        description="Manage people registered for this event."
         actions={manager ? <Link to={`/events/${eventId}/participants/new`} className="btn">Register a participant</Link> : undefined}
       />
       {participants.length === 0 ? (

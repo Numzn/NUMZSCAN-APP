@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { Link, useParams } from "react-router-dom";
 import { describeError } from "../../app/errors";
+import { useWorkspaceEvents } from "../../app/WorkspaceEvents";
 import { EVENT_STATUS, statusOf } from "../../app/labels";
 import { Badge } from "../../components/Badge";
 import { PageHeader } from "../../components/PageHeader";
@@ -18,6 +19,7 @@ export function EventSettingsPage() {
   const [saveError, setSaveError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const { reload: reloadEvents } = useWorkspaceEvents();
 
   useEffect(() => {
     let cancelled = false;
@@ -60,6 +62,7 @@ export function EventSettingsPage() {
     try {
       const { event: saved } = await api.updateEvent(eventId, changed);
       setEvent(saved);
+      reloadEvents();
       setNotice("Saved. The change is in the audit log.");
     } catch (err) {
       setSaveError(describeError(err));

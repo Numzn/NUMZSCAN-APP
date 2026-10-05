@@ -21,12 +21,13 @@ EventPass
 ├── Events                      /  and  /events
 │   ├── New event               /events/new                       (administrators)
 │   └── Event                   /events/:eventId                  (event shell)
-│       ├── Overview            /events/:eventId                  (index)
+│       ├── Overview            /events/:eventId                  (index: totals and role)
 │       ├── Participants        /events/:eventId/participants
 │       │   └── Register        /events/:eventId/participants/new (managers)
 │       ├── Groups              /events/:eventId/groups
 │       ├── Access              /events/:eventId/access           (managers view, administrators change)
 │       └── Settings            /admin/events/:eventId            (administrators)
+│   (Registration, Credentials, Checkpoints, Attendance and Reports are not built; they are not in the navigation.)
 │   └── Person in an event      /event-participants/:participantId
 └── Admin                       /admin                            (administrators, admin shell)
     ├── Overview                /admin
@@ -45,12 +46,16 @@ A shell is a layout route. It owns navigation, and its children own content.
 
 | Shell | Used by | Provides |
 |---|---|---|
-| **App shell** | Everything after sign-in | Top bar: brand, Events, New event (administrators), Admin (administrators), account, sign out |
-| **Event shell** | `/events/:eventId/*` | Breadcrumbs (Events, event name), the event's name and dates, its status, and tabs: Overview, Participants, Groups, Access, Settings |
-| **Admin shell** | `/admin/*` | Sidebar on desktop, tabs on a phone: Overview, Users, Events, Audit log |
+| **App shell** | Everything after sign-in | Sidebar: My events (managers and staff), the event's operations and setup while an event is open, and Workspace and Administration for administrators. Top bar: brand, the open event's name, account. Sign out in the sidebar. |
+| **Event shell** | `/events/:eventId/*` | Breadcrumbs (Events, event name), the event's name, dates, and status. The event's sections are in the sidebar, not repeated as tabs. |
+| **Admin shell** | `/admin/*` | The app sidebar's Administration section: Overview, Users, Manage events, Audit log. A drawer on a phone. |
 | **Auth shell** | `/login` | Centred card, no navigation |
 
-The event shell shows only tabs the viewer may use. Access is hidden from staff, and Settings is hidden from everyone but administrators.
+The sidebar shows only the event sections the viewer may use. Access is hidden from staff, and Settings is hidden from everyone but administrators. Sections are defined once, in `app/navigation.ts`.
+
+The sidebar is the one event navigation. The event shell does not repeat it as tabs, and the phone drawer shows the same sections as the desktop sidebar.
+
+An administrator's sidebar keeps the Workspace and Administration sections. Inside an event it also gets that event's operations and setup, between them.
 
 ## Page anatomy
 
@@ -71,7 +76,7 @@ Shared building blocks, in `web/src/components/`:
 
 - **PageHeader**: breadcrumbs, title, description, actions, and the document title.
 - **Breadcrumbs**: an ordered list in a `nav` labelled "Breadcrumb". The last item is `aria-current="page"` and is not a link.
-- **NavTabs**: a labelled `nav` of router links, with the active tab marked `aria-current`.
+- **NavTabs**: a labelled `nav` of router links, with the active tab marked `aria-current`. Not used by the event shell any more; kept for sections that need local tabs.
 - **Badge**: a status label with a tone (green, amber, red, blue, grey). Wording comes from `app/labels.ts`.
 - **NotFound**: the page for unknown addresses and for admin pages a non-administrator opens.
 - Existing: `Layout` (app shell), `RequireAuth`, `EventShell`, `AdminLayout`, `AdminRoute`.
@@ -107,7 +112,7 @@ Every data page handles four states, in this order:
 ## Responsive rules
 
 - **Phone (up to 640px).** Tables become labelled blocks. Shells stack. Tabs scroll sideways and never wrap. No page may scroll horizontally.
-- **Tablet and desktop.** Content is at most 60rem wide. The admin sidebar is 11rem.
+- **Tablet and desktop.** Content is at most 1280px wide. The sidebar is 248px.
 - Form controls shrink to their container, so a long option never widens the page.
 
 ## Accessibility
@@ -134,6 +139,7 @@ Every data page handles four states, in this order:
 
 ## Not in this change
 
-- Sharing one loaded event between the shell and its pages. Each page still loads the event itself. This costs an extra request and is the next thing to fix.
+- Sharing one loaded event between the shell and its pages. Each page still loads the event itself. The sidebar and topbar share the list of events (`app/WorkspaceEvents.tsx`), not the open event.
+- Registration, Credentials, Checkpoints, Attendance and Reports. Their navigation items are added when their pages exist.
 - Renaming addresses.
 - A shared notice component. Notices still use the existing classes.

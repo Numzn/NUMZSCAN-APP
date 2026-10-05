@@ -1,21 +1,17 @@
 import { useEffect, useState } from "react";
 import { Outlet, useLocation, useParams } from "react-router-dom";
-import { useAuth } from "../../app/AuthContext";
+import { formatEventDates } from "../../app/dates";
 import { EVENT_STATUS, statusOf } from "../../app/labels";
-import { can, viewerOf } from "../../app/policy";
 import { Badge } from "../../components/Badge";
 import { Breadcrumbs, type Crumb } from "../../components/Breadcrumbs";
-import { NavTabs, type Tab } from "../../components/NavTabs";
 import { api, ApiError } from "../../services/api";
 import type { CampEvent } from "../../services/types";
 import { LoadingState } from "../../components/States";
 
-// Wraps every page of one event: its name, dates, status, breadcrumbs, and sections.
+// Wraps every page of one event: its name, dates, status, and breadcrumbs. The sections are in the sidebar.
 export function EventShell() {
   const { eventId = "" } = useParams();
   const { pathname } = useLocation();
-  const { state } = useAuth();
-  const viewer = viewerOf(state);
   const [event, setEvent] = useState<CampEvent | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -50,14 +46,6 @@ export function EventShell() {
     ...sectionCrumbs,
   ];
 
-  const tabs: Tab[] = [
-    { to: base, label: "Overview", end: true },
-    { to: `${base}/participants`, label: "Participants" },
-    { to: `${base}/groups`, label: "Groups" },
-    ...(can(viewer, "event.access.view", eventId) ? [{ to: `${base}/access`, label: "Access" }] : []),
-    ...(can(viewer, "app.admin") ? [{ to: `/admin/events/${eventId}`, label: "Settings" }] : []),
-  ];
-
   const status = statusOf(EVENT_STATUS, event.status);
 
   return (
@@ -66,11 +54,10 @@ export function EventShell() {
       <header className="event-header">
         <div>
           <p className="event-name">{event.name}</p>
-          <p className="meta">{event.startsOn} to {event.endsOn} · {event.timezone}</p>
+          <p className="meta">{formatEventDates(event.startsOn, event.endsOn)} · {event.timezone}</p>
         </div>
         <Badge tone={status.tone}>{status.label}</Badge>
       </header>
-      <NavTabs label="Event sections" items={tabs} />
       <div className="event-body">
         <Outlet />
       </div>

@@ -2,6 +2,7 @@ import { useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../app/AuthContext";
 import { can, viewerOf } from "../../app/policy";
+import { useWorkspaceEvents } from "../../app/WorkspaceEvents";
 import { PageHeader } from "../../components/PageHeader";
 import { api, ApiError } from "../../services/api";
 import { slugify } from "./slug";
@@ -27,6 +28,7 @@ function describeError(err: unknown): string {
 export function EventCreatePage() {
   const { state } = useAuth();
   const navigate = useNavigate();
+  const { reload: reloadEvents } = useWorkspaceEvents();
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
   const [slugEdited, setSlugEdited] = useState(false);
@@ -57,6 +59,7 @@ export function EventCreatePage() {
     setSubmitting(true);
     try {
       const { event: created } = await api.createEvent({ slug, name: name.trim(), kind, timezone: timezone.trim(), startsOn, endsOn });
+      reloadEvents();
       navigate(`/events/${created.id}`);
     } catch (err) {
       setError(describeError(err));

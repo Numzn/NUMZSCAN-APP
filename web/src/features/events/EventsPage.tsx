@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Badge } from "../../components/Badge";
 import { PageHeader } from "../../components/PageHeader";
+import { formatEventDates } from "../../app/dates";
 import { EVENT_STATUS, statusOf } from "../../app/labels";
 import { api, ApiError } from "../../services/api";
 import type { CampEvent } from "../../services/types";
@@ -41,7 +42,7 @@ export function EventsPage() {
             <li key={event.id} className="event-card">
               <div className="event-card-main">
                 <Link to={`/events/${event.id}`}>{event.name}</Link>
-                <span className="meta">{event.startsOn} to {event.endsOn}</span>
+                <span className="meta">{formatEventDates(event.startsOn, event.endsOn)}</span>
               </div>
               <Badge tone={status.tone}>{status.label}</Badge>
             </li>

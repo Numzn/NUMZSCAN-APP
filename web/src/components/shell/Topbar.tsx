@@ -7,10 +7,12 @@ interface TopbarProps {
   menuOpen: boolean;
   onToggleMenu: () => void;
   displayName: string;
+  // The event whose pages are open. Shown so the manager always knows which event they are working in.
+  event: { id: string; name: string } | null;
 }
 
-// Identity and the phone's menu button. Navigation lives in the sidebar, not here.
-export function Topbar({ menuRef, menuOpen, onToggleMenu, displayName }: TopbarProps) {
+// Identity, the current event, and the phone's menu button. Navigation lives in the sidebar, not here.
+export function Topbar({ menuRef, menuOpen, onToggleMenu, displayName, event }: TopbarProps) {
   return (
     <header className="topbar">
       <button
@@ -25,6 +27,9 @@ export function Topbar({ menuRef, menuOpen, onToggleMenu, displayName }: TopbarP
         <span aria-hidden="true" />
       </button>
       <Link to="/" className="topbar-brand">EventPass</Link>
+      {event && (
+        <Link to={`/events/${event.id}`} className="topbar-context">{event.name}</Link>
+      )}
       {displayName && (
         <div className="account">
           <span className="avatar" aria-hidden="true">{initials(displayName)}</span>

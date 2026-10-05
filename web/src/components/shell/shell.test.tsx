@@ -1,16 +1,18 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
-import { afterEach, describe, expect, it, vi } from "vitest";
-import { navigationFor } from "../../app/navigation";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { api } from "../../services/api";
 import { ADMIN, MANAGER, STAFF, renderAs } from "../../test/session";
 import { PageHeader } from "../PageHeader";
 
 vi.mock("../../services/api", async (importOriginal) => {
   const actual = await importOriginal<typeof import("../../services/api")>();
-  return { ...actual, api: { ...actual.api, me: vi.fn() } };
+  return { ...actual, api: { ...actual.api, me: vi.fn(), listEvents: vi.fn() } };
 });
 import { AppShell } from "./AppShell";
+
+const CAMP = { id: "e-1", slug: "youth", name: "Youth Camp", kind: "church_camp" as const, timezone: "Africa/Lusaka", status: "open" as const, startsOn: "2027-12-01", endsOn: "2027-12-05" };
 
 // Simulates a phone (below the 1100px desktop breakpoint) or a desktop window.
 function viewport(desktop: boolean) {
@@ -22,33 +24,13 @@ function viewport(desktop: boolean) {
   })) as unknown as typeof window.matchMedia;
 }
 
+beforeEach(() => {
+  vi.mocked(api.listEvents).mockResolvedValue({ events: [CAMP] });
+});
+
 afterEach(() => {
   delete (window as Partial<Window>).matchMedia;
   document.documentElement.classList.remove("drawer-open");
-});
-
-const viewer = (user: typeof ADMIN, memberships: { eventId: string; role: "event_manager" | "staff" }[] = []) => ({ user, memberships });
-
-describe("navigation definition", () => {
-  it("shows administrators the new-event action and the whole administration section", () => {
-    const sections = navigationFor(viewer(ADMIN));
-    expect(sections.map((s) => s.title)).toEqual(["Workspace", "Administration"]);
-    expect(sections[0].items.map((i) => i.label)).toEqual(["Events", "New event"]);
-    expect(sections[1].items.map((i) => i.label)).toEqual(["Overview", "Users", "Manage events", "Audit log"]);
-  });
-
-  it("shows managers and staff only the events they work on", () => {
-    expect(navigationFor(viewer(MANAGER, [{ eventId: "e", role: "event_manager" }]))).toEqual([
-      expect.objectContaining({ title: "Workspace", items: [expect.objectContaining({ label: "Events" })] }),
-    ]);
-    expect(navigationFor(viewer(STAFF, [{ eventId: "e", role: "staff" }]))[0].items.map((i) => i.label)).toEqual(["Events"]);
-  });
-
-  it("marks Events current for event pages but not for the new-event page", () => {
-    const events = navigationFor(viewer(ADMIN))[0].items[0];
-    expect(events.match("/events/abc/groups")).toBe(true);
-    expect(events.match("/events/new")).toBe(false);
-  });
 });
 
 describe("application shell", () => {
@@ -64,7 +46,7 @@ describe("application shell", () => {
 
   it("gives administration links to administrators only", async () => {
     viewport(true);
-    renderAs(<AppShell />, { user: MANAGER, memberships: [{ eventId: "e", role: "event_manager" }], path: "*", route: "/events" });
+    renderAs(<AppShell />, { user: MANAGER, memberships: [{ eventId: CAMP.id, role: "event_manager" }], path: "*", route: "/events" });
     await screen.findByRole("navigation", { name: "Main navigation" });
     expect(screen.queryByRole("link", { name: "Audit log" })).toBeNull();
     expect(screen.queryByRole("link", { name: "New event" })).toBeNull();
@@ -110,6 +92,68 @@ describe("application shell", () => {
     renderAs(<AppShell />, { user: ADMIN, path: "*", route: "/events" });
     await screen.findByRole("navigation", { name: "Main navigation" });
     expect(document.getElementById("app-sidebar")).not.toHaveAttribute("inert");
+  });
+});
+
+describe("event manager workspace", () => {
+  const managerOfCamp = [{ eventId: CAMP.id, role: "event_manager" as const }];
+
+  it("shows the manager's event and the operations of the event they are in", async () => {
+    viewport(true);
+    renderAs(<AppShell />, { user: MANAGER, memberships: managerOfCamp, path: "*", route: `/events/${CAMP.id}/groups` });
+    const nav = await screen.findByRole("navigation", { name: "Main navigation" });
+    await within(nav).findByRole("link", { name: "Youth Camp" });
+    expect(within(nav).getByRole("link", { name: "Groups" })).toHaveAttribute("aria-current", "page");
+    expect(within(nav).getByRole("link", { name: "Youth Camp" })).toHaveAttribute("aria-current", "true");
+    expect(within(nav).getByRole("link", { name: "Access" })).toBeInTheDocument();
+    expect(within(nav).queryByRole("link", { name: "Settings" })).toBeNull();
+    expect(within(nav).queryByRole("link", { name: "Credentials" })).toBeNull();
+    expect(within(nav).queryByRole("link", { name: "Registration" })).toBeNull();
+  });
+
+  it("offers an event's operations from its address, even before the event list has loaded it", async () => {
+    viewport(true);
+    vi.mocked(api.listEvents).mockRejectedValue(new Error("offline"));
+    renderAs(<AppShell />, { user: MANAGER, memberships: managerOfCamp, path: "*", route: `/events/${CAMP.id}` });
+    const nav = await screen.findByRole("navigation", { name: "Main navigation" });
+    expect(await within(nav).findByText("Your events could not be loaded.")).toBeInTheDocument();
+    expect(within(nav).getByRole("link", { name: "Overview" })).toBeInTheDocument();
+  });
+
+  it("names the current event in the topbar, linking to its overview", async () => {
+    viewport(true);
+    renderAs(<AppShell />, { user: MANAGER, memberships: managerOfCamp, path: "*", route: `/events/${CAMP.id}/participants` });
+    const topbar = await waitFor(() => {
+      const header = document.querySelector("header.topbar");
+      expect(header).toHaveTextContent("Youth Camp");
+      return header!;
+    });
+    expect(within(topbar as HTMLElement).getByRole("link", { name: "Youth Camp" })).toHaveAttribute("href", `/events/${CAMP.id}`);
+  });
+
+  it("shows no event name in the topbar outside an event", async () => {
+    viewport(true);
+    renderAs(<AppShell />, { user: MANAGER, memberships: managerOfCamp, path: "*", route: "/events" });
+    await screen.findByRole("navigation", { name: "Main navigation" });
+    await waitFor(() => expect(vi.mocked(api.listEvents)).toHaveBeenCalled());
+    expect(document.querySelector("header.topbar .topbar-context")).toBeNull();
+  });
+
+  it("hides Access from staff, who cannot see the access list", async () => {
+    viewport(true);
+    renderAs(<AppShell />, { user: STAFF, memberships: [{ eventId: CAMP.id, role: "staff" }], path: "*", route: `/events/${CAMP.id}` });
+    const nav = await screen.findByRole("navigation", { name: "Main navigation" });
+    await within(nav).findByRole("link", { name: "Groups" });
+    expect(within(nav).queryByRole("link", { name: "Access" })).toBeNull();
+  });
+
+  it("closes the drawer when a manager chooses an event operation on a phone", async () => {
+    viewport(false);
+    renderAs(<AppShell />, { user: MANAGER, memberships: managerOfCamp, path: "*", route: `/events/${CAMP.id}` });
+    await screen.findByRole("navigation", { name: "Main navigation" });
+    await userEvent.click(screen.getByRole("button", { name: "Open navigation" }));
+    await userEvent.click(within(document.getElementById("app-sidebar")!).getByRole("link", { name: "Groups" }));
+    await waitFor(() => expect(document.getElementById("app-sidebar")).not.toHaveClass("open"));
   });
 });
 

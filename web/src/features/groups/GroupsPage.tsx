@@ -61,7 +61,7 @@ export function GroupsPage() {
 
   return (
     <section>
-      <PageHeader title="Groups" />
+      <PageHeader title="Groups" description="Organise participants for this event." />
       {groups.length === 0 ? (
         <EmptyState>No groups yet.</EmptyState>
       ) : (

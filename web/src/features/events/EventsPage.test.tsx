@@ -38,7 +38,7 @@ describe("EventsPage", () => {
     renderPage();
     const link = await screen.findByRole("link", { name: "Youth Camp 2026" });
     expect(link).toHaveAttribute("href", `/events/${camp.id}`);
-    expect(screen.getByText("2026-12-01 to 2026-12-05")).toBeInTheDocument();
+    expect(screen.getByText("1 Dec – 5 Dec 2026")).toBeInTheDocument();
     expect(screen.getByText("Open")).toBeInTheDocument();
   });
 

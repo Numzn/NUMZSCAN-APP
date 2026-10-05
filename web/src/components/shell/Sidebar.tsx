@@ -1,6 +1,6 @@
 import { forwardRef } from "react";
 import { Link } from "react-router-dom";
-import type { NavSection } from "../../app/navigation";
+import type { NavItem, NavSection } from "../../app/navigation";
 import { initials } from "./initials";
 
 interface SidebarProps {
@@ -11,6 +11,12 @@ interface SidebarProps {
   displayName: string;
   onNavigate: () => void;
   onSignOut: () => void;
+}
+
+// The current page is "page". An event that holds the open pages is "true": current in its set, not the page itself.
+function currentValue(item: NavItem, pathname: string): "page" | "true" | undefined {
+  if (!item.match(pathname)) return undefined;
+  return item.context ? "true" : "page";
 }
 
 // Permanent on desktop. On smaller screens it is a drawer, opened from the topbar.
@@ -25,15 +31,19 @@ export const Sidebar = forwardRef<HTMLElement, SidebarProps>(function Sidebar(
         {sections.map((section) => (
           <div key={section.title}>
             <p className="nav-heading">{section.title}</p>
-            <ul className="nav-list">
-              {section.items.map((item) => (
-                <li key={item.to}>
-                  <Link to={item.to} onClick={onNavigate} aria-current={item.match(pathname) ? "page" : undefined}>
-                    {item.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
+            {section.items.length > 0 ? (
+              <ul className="nav-list">
+                {section.items.map((item) => (
+                  <li key={item.to}>
+                    <Link to={item.to} onClick={onNavigate} aria-current={currentValue(item, pathname)}>
+                      {item.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              section.note && <p className="nav-note">{section.note}</p>
+            )}
           </div>
         ))}
       </nav>
