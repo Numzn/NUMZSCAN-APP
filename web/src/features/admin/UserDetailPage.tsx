@@ -3,6 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import { useAuth } from "../../app/AuthContext";
 import { describeError } from "../../app/errors";
 import { Badge } from "../../components/Badge";
+import { PageHeader } from "../../components/PageHeader";
 import { api } from "../../services/api";
 import type { AdminUserDetail } from "../../services/types";
 
@@ -94,14 +95,16 @@ export function UserDetailPage() {
 
   return (
     <section>
-      <p><Link to="/admin/users" className="back-link">← Users</Link></p>
-      <div className="page-head">
-        <h1>{user.displayName}</h1>
-        <div className="badges">
-          {user.isAdmin && <Badge tone="blue">Administrator</Badge>}
-          {user.isActive ? <Badge tone="green">Active</Badge> : <Badge tone="red">Deactivated</Badge>}
-        </div>
-      </div>
+      <PageHeader
+        title={user.displayName}
+        crumbs={[{ label: "Admin", to: "/admin" }, { label: "Users", to: "/admin/users" }, { label: user.displayName }]}
+        badge={
+          <div className="badges">
+            {user.isAdmin && <Badge tone="blue">Administrator</Badge>}
+            {user.isActive ? <Badge tone="green">Active</Badge> : <Badge tone="red">Deactivated</Badge>}
+          </div>
+        }
+      />
 
       <dl className="facts card">
         <dt>Email</dt><dd>{user.email}</dd>

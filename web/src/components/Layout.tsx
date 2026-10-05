@@ -1,5 +1,6 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "../app/AuthContext";
+import { can, viewerOf } from "../app/policy";
 
 function initials(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);
@@ -25,8 +26,8 @@ export function Layout() {
         </NavLink>
         <nav className="topnav" aria-label="Main">
           <NavLink to="/" end>Events</NavLink>
-          {state.status === "signed-in" && state.user.isAdmin && <NavLink to="/events/new">New event</NavLink>}
-          {state.status === "signed-in" && state.user.isAdmin && <NavLink to="/admin">Admin</NavLink>}
+          {can(viewerOf(state), "event.create") && <NavLink to="/events/new">New event</NavLink>}
+          {can(viewerOf(state), "app.admin") && <NavLink to="/admin">Admin</NavLink>}
         </nav>
         <div className="account">
           {displayName && (

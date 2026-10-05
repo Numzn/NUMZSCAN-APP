@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { PageHeader } from "../../components/PageHeader";
 import { api, ApiError } from "../../services/api";
 import type { AuditEntry, Overview } from "../../services/types";
 import { actionLabel, describeEntry } from "./auditText";
@@ -40,7 +41,7 @@ export function OverviewPage() {
 
   return (
     <section>
-      <h1>Overview</h1>
+      <PageHeader title="Overview" />
       <div className="metrics">
         {counters.map(([label, value]) => (
           <div className="metric" key={label}>

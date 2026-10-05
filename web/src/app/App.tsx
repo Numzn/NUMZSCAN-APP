@@ -1,9 +1,11 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { RequireAuth } from "../components/RequireAuth";
 import { Layout } from "../components/Layout";
+import { NotFound } from "../components/NotFound";
 import { LoginPage } from "../features/auth/LoginPage";
 import { EventCreatePage } from "../features/events/EventCreatePage";
 import { EventDetailPage } from "../features/events/EventDetailPage";
+import { EventShell } from "../features/events/EventShell";
 import { EventsPage } from "../features/events/EventsPage";
 import { GroupsPage } from "../features/groups/GroupsPage";
 import { ParticipantDetailPage } from "../features/participants/ParticipantDetailPage";
@@ -20,6 +22,7 @@ import { UserDetailPage } from "../features/admin/UserDetailPage";
 import { UsersPage } from "../features/admin/UsersPage";
 import { AuthProvider } from "./AuthContext";
 
+// Address structure: docs/design/ui-architecture.md. Addresses here are unchanged from earlier releases.
 export function App() {
   return (
     <BrowserRouter>
@@ -36,11 +39,13 @@ export function App() {
             <Route index element={<EventsPage />} />
             <Route path="events" element={<EventsPage />} />
             <Route path="events/new" element={<EventCreatePage />} />
-            <Route path="events/:eventId" element={<EventDetailPage />} />
-            <Route path="events/:eventId/groups" element={<GroupsPage />} />
-            <Route path="events/:eventId/participants" element={<ParticipantsPage />} />
-            <Route path="events/:eventId/participants/new" element={<RegisterParticipantPage />} />
-            <Route path="events/:eventId/access" element={<AccessPage />} />
+            <Route path="events/:eventId" element={<EventShell />}>
+              <Route index element={<EventDetailPage />} />
+              <Route path="participants" element={<ParticipantsPage />} />
+              <Route path="participants/new" element={<RegisterParticipantPage />} />
+              <Route path="groups" element={<GroupsPage />} />
+              <Route path="access" element={<AccessPage />} />
+            </Route>
             <Route path="event-participants/:participantId" element={<ParticipantDetailPage />} />
             <Route path="admin" element={<AdminRoute><AdminLayout /></AdminRoute>}>
               <Route index element={<OverviewPage />} />
@@ -51,7 +56,7 @@ export function App() {
               <Route path="audit" element={<AuditPage />} />
             </Route>
           </Route>
-          <Route path="*" element={<p className="status">Page not found.</p>} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </AuthProvider>
     </BrowserRouter>

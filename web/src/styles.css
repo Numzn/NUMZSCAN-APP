@@ -242,3 +242,39 @@ input:focus, select:focus { border-color: var(--brand); box-shadow: 0 0 0 3px rg
 /* Form controls shrink to their container. A long option (such as an email) must not widen the page. */
 label { min-width: 0; }
 input, select, textarea { max-width: 100%; min-width: 0; }
+
+/* Structure: page title, breadcrumbs, event shell, and section tabs (see docs/design/ui-architecture.md) */
+.page-header { margin-bottom: 0.5rem; }
+.page-title { display: grid; gap: 0.2rem; min-width: 0; }
+.page-title-line { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
+.page-title-line h1 { margin: 0; }
+.page-title p { margin: 0; }
+.page-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; }
+
+.breadcrumbs { margin-bottom: 0.6rem; font-size: 0.9rem; max-width: 100%; }
+.breadcrumbs ol { display: flex; flex-wrap: wrap; gap: 0.25rem 0.4rem; list-style: none; margin: 0; padding: 0; color: var(--muted); }
+.breadcrumbs li { display: flex; align-items: center; gap: 0.4rem; min-width: 0; }
+.breadcrumbs li + li::before { content: "/"; color: var(--line); }
+.breadcrumbs a { color: var(--muted); font-weight: 600; }
+.breadcrumbs a:hover { color: var(--brand); }
+.breadcrumbs [aria-current="page"] { color: var(--ink); font-weight: 600; overflow-wrap: anywhere; }
+
+.event-shell { display: grid; gap: 0.9rem; min-width: 0; }
+.event-header { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 0.5rem 1rem; }
+.event-header .event-name { margin: 0; font-size: 1.25rem; font-weight: 700; overflow-wrap: anywhere; }
+.event-header .meta { margin: 0.1rem 0 0; }
+
+.tabs {
+  display: flex; gap: 0.25rem; overflow-x: auto; max-width: 100%;
+  border-bottom: 1px solid var(--line); scrollbar-width: thin;
+}
+.tabs a {
+  flex: 0 0 auto; padding: 0.55rem 0.8rem; color: var(--muted); font-weight: 600;
+  border-bottom: 2px solid transparent; margin-bottom: -1px; white-space: nowrap;
+}
+.tabs a:hover { color: var(--ink); text-decoration: none; }
+.tabs a[aria-current="page"] { color: var(--brand-strong); border-bottom-color: var(--brand); }
+
+.event-body { min-width: 0; }
+.not-found { padding: 1rem 0; }
+.not-found h1 { margin-bottom: 0.3rem; }

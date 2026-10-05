@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Badge } from "../../components/Badge";
+import { PageHeader } from "../../components/PageHeader";
 import { EVENT_STATUS, statusOf } from "../../app/labels";
 import { api, ApiError } from "../../services/api";
 import type { CampEvent } from "../../services/types";
@@ -31,7 +32,7 @@ export function EventsPage() {
 
   return (
     <section>
-      <h1>Events</h1>
+      <PageHeader title="Events" />
       <ul className="event-list">
         {events.map((event) => {
           const status = statusOf(EVENT_STATUS, event.status);

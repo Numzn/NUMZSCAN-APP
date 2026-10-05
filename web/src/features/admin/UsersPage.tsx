@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { describeError } from "../../app/errors";
 import { Badge } from "../../components/Badge";
+import { PageHeader } from "../../components/PageHeader";
 import { api } from "../../services/api";
 import type { AdminUser } from "../../services/types";
 
@@ -67,12 +68,10 @@ export function UsersPage() {
 
   return (
     <section>
-      <div className="page-head">
-        <h1>Users</h1>
-        <button type="button" onClick={() => { setAdding((v) => !v); setFormError(null); }}>
-          {adding ? "Close" : "Add user"}
-        </button>
-      </div>
+      <PageHeader
+        title="Users"
+        actions={<button type="button" onClick={() => { setAdding((v) => !v); setFormError(null); }}>{adding ? "Close" : "Add user"}</button>}
+      />
 
       {notice && <p role="status" className="notice">{notice}</p>}
 

@@ -1,8 +1,9 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { Link, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { useAuth } from "../../app/AuthContext";
 import { describeError } from "../../app/errors";
-import { canManage, roleFor } from "../../app/roles";
+import { can, viewerOf } from "../../app/policy";
+import { PageHeader } from "../../components/PageHeader";
 import { api, ApiError } from "../../services/api";
 import type { AccessRow, AdminUser, CampEvent } from "../../services/types";
 
@@ -12,9 +13,8 @@ const ROLE_LABEL: Record<Role, string> = { event_manager: "Event manager", staff
 export function AccessPage() {
   const { eventId = "" } = useParams();
   const { state } = useAuth();
-  const me = state.status === "signed-in" ? state.user : null;
-  const isAdmin = Boolean(me?.isAdmin);
-  const manager = state.status === "signed-in" && canManage(roleFor(state.user, state.memberships, eventId));
+  const isAdmin = can(viewerOf(state), "event.access.change", eventId);
+  const manager = can(viewerOf(state), "event.access.view", eventId);
 
   const [event, setEvent] = useState<CampEvent | null>(null);
   const [rows, setRows] = useState<AccessRow[] | null>(null);
@@ -101,9 +101,7 @@ export function AccessPage() {
 
   return (
     <section>
-      <p><Link to={`/events/${eventId}`} className="back-link">← {event.name}</Link></p>
-      <h1>Access</h1>
-      <p className="meta">Who can work on {event.name}, and in what role.</p>
+      <PageHeader title="Access" description={`Who can work on ${event.name}, and in what role.`} />
 
       {!isAdmin && manager && (
         <p className="meta">Only administrators can add, change, or remove access. You can see the list.</p>

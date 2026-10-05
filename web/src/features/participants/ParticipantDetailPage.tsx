@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { useAuth } from "../../app/AuthContext";
 import { CREDENTIAL_STATUS, PARTICIPANT_STATUS, statusOf } from "../../app/labels";
-import { canIssue, canManage, roleFor } from "../../app/roles";
+import { can, roleOn, viewerOf } from "../../app/policy";
+import { PageHeader } from "../../components/PageHeader";
 import { Badge } from "../../components/Badge";
 import { QrPass } from "../credentials/QrPass";
 import { isCredentialToken } from "../credentials/pass";
@@ -63,9 +64,10 @@ export function ParticipantDetailPage() {
   if (error) return <p role="alert" className="error">{error}</p>;
   if (!participant || !event) return <p className="status">Loading participant…</p>;
 
-  const role = roleFor(state.user, state.memberships, participant.eventId);
-  const manager = canManage(role);
-  const issuer = canIssue(role);
+  const viewer = viewerOf(state);
+  const role = roleOn(viewer, participant.eventId);
+  const manager = can(viewer, "event.manage", participant.eventId);
+  const issuer = can(viewer, "credential.issue", participant.eventId);
   const activeCredential = credentials.find((c) => c.status === "active") ?? null;
   const currentGroup = groups.find((g) => g.id === participant.groupId)?.name ?? null;
   const participantStatus = statusOf(PARTICIPANT_STATUS, participant.status);
@@ -116,11 +118,16 @@ export function ParticipantDetailPage() {
 
   return (
     <section>
-      <p><Link to={`/events/${participant.eventId}/participants`} className="back-link">← Participants</Link></p>
-      <div className="page-head">
-        <h1>{participant.fullName}</h1>
-        <Badge tone={participantStatus.tone}>{participantStatus.label}</Badge>
-      </div>
+      <PageHeader
+        title={participant.fullName}
+        crumbs={[
+          { label: "Events", to: "/events" },
+          { label: event.name, to: `/events/${participant.eventId}` },
+          { label: "Participants", to: `/events/${participant.eventId}/participants` },
+          { label: participant.fullName },
+        ]}
+        badge={<Badge tone={participantStatus.tone}>{participantStatus.label}</Badge>}
+      />
 
       <dl className="facts card">
         <dt>Event</dt><dd>{event.name}</dd>

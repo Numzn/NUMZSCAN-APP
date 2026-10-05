@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useAuth } from "../../app/AuthContext";
 import { PARTICIPANT_STATUS, statusOf } from "../../app/labels";
-import { canManage, roleFor } from "../../app/roles";
+import { can, viewerOf } from "../../app/policy";
+import { PageHeader } from "../../components/PageHeader";
 import { Badge } from "../../components/Badge";
 import { api, ApiError } from "../../services/api";
 import type { CampEvent, Group, Participant } from "../../services/types";
@@ -40,7 +41,7 @@ export function ParticipantsPage() {
   }, [eventId]);
 
   if (state.status !== "signed-in") return null;
-  const manager = canManage(roleFor(state.user, state.memberships, eventId));
+  const manager = can(viewerOf(state), "event.manage", eventId);
   if (error) return <p role="alert" className="error">{error}</p>;
   if (!participants || !event) return <p className="status">Loading participants…</p>;
 
@@ -48,11 +49,10 @@ export function ParticipantsPage() {
 
   return (
     <section>
-      <p><Link to={`/events/${eventId}`} className="back-link">← {event.name}</Link></p>
-      <div className="page-head">
-        <h1>Participants</h1>
-        {manager && <Link to={`/events/${eventId}/participants/new`} className="btn">Register a participant</Link>}
-      </div>
+      <PageHeader
+        title="Participants"
+        actions={manager ? <Link to={`/events/${eventId}/participants/new`} className="btn">Register a participant</Link> : undefined}
+      />
       {participants.length === 0 ? (
         <p className="status">No participants registered yet.</p>
       ) : (

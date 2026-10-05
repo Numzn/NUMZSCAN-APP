@@ -52,7 +52,7 @@ beforeEach(() => {
 describe("administrator area guard", () => {
   it("shows the same not-found page to a manager, so the area is not advertised", async () => {
     renderAs(<AdminRoute><p>secret admin content</p></AdminRoute>, { user: MANAGER, path: "/admin", route: "/admin" });
-    expect(await screen.findByText("Page not found.")).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "Page not found" })).toBeInTheDocument();
     expect(screen.queryByText("secret admin content")).toBeNull();
   });
 

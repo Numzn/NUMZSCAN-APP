@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { describeError } from "../../app/errors";
+import { PageHeader } from "../../components/PageHeader";
 import { api } from "../../services/api";
 import type { AuditEntry, CampEvent } from "../../services/types";
 import { AUDIT_ACTIONS, actionLabel, describeEntry } from "./auditText";
@@ -57,8 +58,7 @@ export function AuditPage() {
 
   return (
     <section>
-      <h1>Audit log</h1>
-      <p className="meta">Every change to users, event access, and event settings. Entries cannot be edited or deleted.</p>
+      <PageHeader title="Audit log" description="Every change to users, event access, and event settings. Entries cannot be edited or deleted." />
 
       <div className="toolbar">
         <label>

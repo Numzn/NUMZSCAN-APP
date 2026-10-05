@@ -1,7 +1,8 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { Link, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { useAuth } from "../../app/AuthContext";
-import { canManage, roleFor } from "../../app/roles";
+import { can, viewerOf } from "../../app/policy";
+import { PageHeader } from "../../components/PageHeader";
 import { api, ApiError } from "../../services/api";
 import type { CampEvent, Group, GroupKind } from "../../services/types";
 
@@ -40,7 +41,7 @@ export function GroupsPage() {
   }, [eventId, version]);
 
   if (state.status !== "signed-in") return null;
-  const manager = canManage(roleFor(state.user, state.memberships, eventId));
+  const manager = can(viewerOf(state), "event.manage", eventId);
 
   async function handleCreate(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -59,8 +60,7 @@ export function GroupsPage() {
 
   return (
     <section>
-      <p><Link to={`/events/${eventId}`}>← {event.name}</Link></p>
-      <h1>Groups</h1>
+      <PageHeader title="Groups" />
       {groups.length === 0 ? (
         <p className="status">No groups yet.</p>
       ) : (

@@ -3,6 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import { describeError } from "../../app/errors";
 import { EVENT_STATUS, statusOf } from "../../app/labels";
 import { Badge } from "../../components/Badge";
+import { PageHeader } from "../../components/PageHeader";
 import { api } from "../../services/api";
 import type { CampEvent } from "../../services/types";
 
@@ -70,11 +71,11 @@ export function EventSettingsPage() {
 
   return (
     <section>
-      <p><Link to="/admin/events" className="back-link">← Events</Link></p>
-      <div className="page-head">
-        <h1>{event.name}</h1>
-        <Badge tone={status.tone}>{status.label}</Badge>
-      </div>
+      <PageHeader
+        title={event.name}
+        crumbs={[{ label: "Admin", to: "/admin" }, { label: "Events", to: "/admin/events" }, { label: event.name }]}
+        badge={<Badge tone={status.tone}>{status.label}</Badge>}
+      />
 
       <form className="card form" onSubmit={handleSave}>
         <h2>Settings</h2>

@@ -1,7 +1,8 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../../app/AuthContext";
-import { canManage, roleFor } from "../../app/roles";
+import { can, viewerOf } from "../../app/policy";
+import { PageHeader } from "../../components/PageHeader";
 import { api, ApiError } from "../../services/api";
 import type { Group, PersonMatch } from "../../services/types";
 
@@ -33,7 +34,7 @@ export function RegisterParticipantPage() {
   }, [eventId]);
 
   if (state.status !== "signed-in") return null;
-  if (!canManage(roleFor(state.user, state.memberships, eventId))) {
+  if (!can(viewerOf(state), "participant.register", eventId)) {
     return <p role="alert" className="error">Only event managers can register participants.</p>;
   }
 
@@ -70,8 +71,7 @@ export function RegisterParticipantPage() {
 
   return (
     <section>
-      <p><Link to={`/events/${eventId}/participants`}>← Participants</Link></p>
-      <h1>Register a participant</h1>
+      <PageHeader title="Register a participant" />
 
       <form onSubmit={handleSearch} className="form inline">
         <label>

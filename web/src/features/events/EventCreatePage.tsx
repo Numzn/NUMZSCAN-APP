@@ -1,6 +1,8 @@
 import { useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../app/AuthContext";
+import { can, viewerOf } from "../../app/policy";
+import { PageHeader } from "../../components/PageHeader";
 import { api, ApiError } from "../../services/api";
 import { slugify } from "./slug";
 
@@ -36,7 +38,7 @@ export function EventCreatePage() {
   const [submitting, setSubmitting] = useState(false);
 
   if (state.status !== "signed-in") return null;
-  if (!state.user.isAdmin) {
+  if (!can(viewerOf(state), "event.create")) {
     return <p role="alert" className="error">Only administrators can create events.</p>;
   }
 
@@ -65,7 +67,7 @@ export function EventCreatePage() {
 
   return (
     <section>
-      <h1>New event</h1>
+      <PageHeader title="New event" crumbs={[{ label: "Events", to: "/events" }, { label: "New event" }]} />
       <form onSubmit={handleSubmit} className="form">
         <label>
           Name

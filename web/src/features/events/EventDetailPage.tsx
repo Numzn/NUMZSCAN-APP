@@ -1,16 +1,18 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { useAuth } from "../../app/AuthContext";
-import { EVENT_STATUS, statusOf } from "../../app/labels";
-import { Badge } from "../../components/Badge";
+import { roleOn, viewerOf, type EventRole } from "../../app/policy";
+import { PageHeader } from "../../components/PageHeader";
 import { api, ApiError } from "../../services/api";
-import type { CampEvent, EventMembershipRole } from "../../services/types";
+import type { CampEvent } from "../../services/types";
 
-const ROLE_LABEL: Record<EventMembershipRole, string> = {
+const ROLE_LABEL: Record<EventRole, string> = {
+  admin: "Administrator",
   event_manager: "Event manager",
   staff: "Staff",
 };
 
+// The event's overview. The name, dates, status, and sections are provided by EventShell.
 export function EventDetailPage() {
   const { eventId = "" } = useParams();
   const { state } = useAuth();
@@ -36,44 +38,17 @@ export function EventDetailPage() {
   if (error) return <p role="alert" className="error">{error}</p>;
   if (!event) return <p className="status">Loading event…</p>;
 
-  const signedIn = state.status === "signed-in" ? state : null;
-  const membership = signedIn?.memberships.find((m) => m.eventId === event.id);
-  const yourRole = signedIn?.user.isAdmin
-    ? "Administrator"
-    : membership
-      ? ROLE_LABEL[membership.role]
-      : "No role";
-
-  const status = statusOf(EVENT_STATUS, event.status);
+  const role = roleOn(viewerOf(state), event.id);
 
   return (
     <section>
-      <p><Link to="/" className="back-link">← Events</Link></p>
-      <h1>{event.name}</h1>
+      <PageHeader title="Overview" />
       <dl className="facts card">
-        <dt>Dates</dt>
-        <dd>{event.startsOn} to {event.endsOn}</dd>
         <dt>Timezone</dt>
         <dd>{event.timezone}</dd>
-        <dt>Status</dt>
-        <dd><Badge tone={status.tone}>{status.label}</Badge></dd>
         <dt>Your role</dt>
-        <dd>{yourRole}</dd>
+        <dd>{role ? ROLE_LABEL[role] : "No role"}</dd>
       </dl>
-      <nav className="subnav" aria-label="Event sections">
-        <Link to={`/events/${event.id}/participants`} className="tile">
-          <strong>Participants</strong>
-          <span className="meta">Register people and manage passes</span>
-        </Link>
-        <Link to={`/events/${event.id}/groups`} className="tile">
-          <strong>Groups</strong>
-          <span className="meta">Churches, dormitories and teams</span>
-        </Link>
-        <Link to={`/events/${event.id}/access`} className="tile">
-          <strong>Access</strong>
-          <span className="meta">Who works on this event</span>
-        </Link>
-      </nav>
     </section>
   );
 }

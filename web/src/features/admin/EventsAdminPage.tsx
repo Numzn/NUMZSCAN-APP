@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { describeError } from "../../app/errors";
 import { EVENT_STATUS, statusOf } from "../../app/labels";
 import { Badge } from "../../components/Badge";
+import { PageHeader } from "../../components/PageHeader";
 import { api } from "../../services/api";
 import type { CampEvent } from "../../services/types";
 
@@ -26,10 +27,7 @@ export function EventsAdminPage() {
 
   return (
     <section>
-      <div className="page-head">
-        <h1>Events</h1>
-        <Link to="/events/new" className="btn">New event</Link>
-      </div>
+      <PageHeader title="Events" actions={<Link to="/events/new" className="btn">New event</Link>} />
       {events.length === 0 ? (
         <p className="status">No events yet.</p>
       ) : (
