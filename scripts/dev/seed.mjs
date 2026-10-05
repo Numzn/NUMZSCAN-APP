@@ -43,7 +43,7 @@ if (!event) {
   }
 
   const campers = [
-    ["Michael Banda", "+260 97 123 4567", "registered"],
+    ["Andrew Chanda", "+260 97 123 4567", "registered"],
     ["Esther Mulenga", "+260 96 555 0101", "registered"],
     ["Joseph Tembo", "+260 97 555 0102", "checked_in"],
     ["Ruth Banda", "+260 95 555 0103", "registered"],
@@ -63,6 +63,11 @@ if (!event) {
   }
   console.log("created the demo event with groups and campers");
 }
+
+// A second event, so the cross-event checks have something to refuse.
+await pool.query(
+  "insert into events (slug, name, kind, timezone, starts_on, ends_on, status) values ('other-camp', 'Other Camp 2027', 'church_camp', 'Africa/Lusaka', '2027-06-01', '2027-06-05', 'open') on conflict (slug) do nothing"
+);
 
 const memberships = [["manager@dev.local", "event_manager"], ["staff@dev.local", "staff"]];
 for (const [email, role] of memberships) {

@@ -16,6 +16,16 @@ for name in api web; do
   fi
 done
 
+# Stop any dev server left behind by an earlier run. Only processes whose working directory is this repo's
+# api/ or web/ are touched, so other projects on this host are never affected.
+for pid in $(pgrep -f "src/server.js|node_modules/vite/bin/vite.js" 2>/dev/null || true); do
+  cwd=$(readlink "/proc/$pid/cwd" 2>/dev/null || true)
+  case "$cwd" in
+    "$ROOT/api"|"$ROOT/web")
+      kill "$pid" 2>/dev/null && echo "stopped leftover dev server (pid $pid, $(basename "$cwd"))" ;;
+  esac
+done
+
 if [ "${1:-}" = "--wipe" ]; then
   docker compose -f docker-compose.dev.yml --env-file .env.dev down --volumes
   echo "dev database stopped and its data removed"

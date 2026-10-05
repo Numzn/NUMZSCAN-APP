@@ -84,7 +84,7 @@ start() {
 }
 
 # The API runs from api/, which has no .env, so the production file is never loaded.
-start api api "$API_PORT" env PORT="$API_PORT" EVENTPASS_COOKIE_SECURE=false node --watch src/server.js
+start api api "$API_PORT" env PORT="$API_PORT" HOST=127.0.0.1 EVENTPASS_COOKIE_SECURE=false node --watch src/server.js
 start web web "$WEB_PORT" env EVENTPASS_API="http://127.0.0.1:$API_PORT" node node_modules/vite/bin/vite.js --host 127.0.0.1 --port "$WEB_PORT" --strictPort
 
 for _ in $(seq 1 60); do
