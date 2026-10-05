@@ -1,5 +1,5 @@
 import { ensureTicketShape, rebuildTicketMap, sortTickets, normalizeTickets } from "./tickets.js";
-import { yieldToMainThread } from "./utils.js";
+import { yieldToMainThread, escapeHtml } from "./utils.js";
 
 export function setupActions(context) {
   const {
@@ -358,9 +358,9 @@ export function setupActions(context) {
         (item) => `
       <div class="ticket-item">
         <div class="ticket-qr">
-          <img src="${item.qr}" alt="QR Code for ${item.id}" />
+          <img src="${escapeHtml(item.qr)}" alt="QR Code for ${escapeHtml(item.id)}" />
         </div>
-        <div class="ticket-id">${item.id}</div>
+        <div class="ticket-id">${escapeHtml(item.id)}</div>
       </div>`
       )
       .join("")}

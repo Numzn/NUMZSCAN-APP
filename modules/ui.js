@@ -227,7 +227,10 @@ export function createUi(dom) {
       error: "#c0392b",
     };
     if (dom.scanResultEl) {
-      dom.scanResultEl.innerHTML = `<span style="color:${colors[type] || "#333"}">${title}: ${code}</span>`;
+      const resultText = document.createElement("span");
+      resultText.style.color = colors[type] || "#333";
+      resultText.textContent = `${title}: ${code}`;
+      dom.scanResultEl.replaceChildren(resultText);
     }
 
     dom.scanFeedbackEl.classList.remove("hidden");

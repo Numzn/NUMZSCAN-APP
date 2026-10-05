@@ -1,4 +1,4 @@
-const CACHE_NAME = 'offline-qr-v7'; // fix: actions.js referenced an undefined refreshTickets, crashing bootstrap before any listeners past generateBtn got attached
+const CACHE_NAME = 'offline-qr-v8'; // hotfix: escape untrusted text in DOM sinks (scan result, QR grid, print popup)
 
 // Get the base path from the service worker location
 let basePath = self.location.pathname.replace('/service-worker.js', '');

@@ -30,7 +30,12 @@ export function createTicketGrid(dom, { ticketBaseUrl, useUrlInQr }) {
     tickets.forEach((ticket) => {
       const item = document.createElement("div");
       item.className = "item";
-      item.innerHTML = `<div id="qr-${ticket.id}"></div><div style="margin-top:6px">${ticket.id}</div>`;
+      const qrHolder = document.createElement("div");
+      qrHolder.id = `qr-${ticket.id}`;
+      const idLabel = document.createElement("div");
+      idLabel.style.marginTop = "6px";
+      idLabel.textContent = ticket.id;
+      item.append(qrHolder, idLabel);
       dom.qrcodesEl.appendChild(item);
 
       const qrElement = document.getElementById(`qr-${ticket.id}`);
@@ -47,7 +52,10 @@ export function createTicketGrid(dom, { ticketBaseUrl, useUrlInQr }) {
           failedTickets++;
           failureRecorded = true;
         }
-        qrElement.innerHTML = `<span class="qr-error">${message}</span>`;
+        const errorText = document.createElement("span");
+        errorText.className = "qr-error";
+        errorText.textContent = message;
+        qrElement.replaceChildren(errorText);
         if (parentItem) parentItem.classList.add("qr-error-state");
       };
 
