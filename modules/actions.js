@@ -395,13 +395,14 @@ export function setupActions(context) {
   }
 
   function generateDataURLForQR(text) {
+    const svgText = escapeHtml(text);
     return new Promise((resolve) => {
       try {
         if (typeof QRCode === "undefined") {
           resolve(
             "data:image/svg+xml;utf8," +
               encodeURIComponent(
-                `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><rect width="100%" height="100%" fill="#eee"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="10" fill="#666">${text}</text></svg>`
+                `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><rect width="100%" height="100%" fill="#eee"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="10" fill="#666">${svgText}</text></svg>`
               )
           );
           return;
@@ -464,7 +465,7 @@ export function setupActions(context) {
             resolve(
               "data:image/svg+xml;utf8," +
                 encodeURIComponent(
-                  `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><rect width="100%" height="100%" fill="#eee"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="10" fill="#666">${text}</text></svg>`
+                  `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><rect width="100%" height="100%" fill="#eee"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="10" fill="#666">${svgText}</text></svg>`
                 )
             );
           }
@@ -474,7 +475,7 @@ export function setupActions(context) {
         resolve(
           "data:image/svg+xml;utf8," +
             encodeURIComponent(
-              `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><rect width="100%" height="100%" fill="#eee"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="10" fill="#666">${text}</text></svg>`
+              `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><rect width="100%" height="100%" fill="#eee"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="10" fill="#666">${svgText}</text></svg>`
             )
         );
       }

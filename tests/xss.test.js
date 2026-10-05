@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { setupActions } from "../modules/actions.js";
 import { createUi } from "../modules/ui.js";
 import { createTicketGrid } from "../modules/ticketGrid.js";
 import { escapeHtml } from "../modules/utils.js";
@@ -103,3 +104,31 @@ describe("escapeHtml", () => {
   });
 });
 
+
+describe("print sheet SVG fallback", () => {
+  it("escapes ticket text inside the SVG fallback image", async () => {
+    delete globalThis.QRCode;
+    const written = [];
+    window.open = vi.fn(() => ({ document: { write: (s) => written.push(s), close() {} } }));
+    const button = document.createElement("button");
+    document.body.appendChild(button);
+    setupActions({
+      dom: { downloadSheetBtn: button },
+      ui: {},
+      state: { tickets: [{ id: PAYLOAD }] },
+      onTicketsChanged() {},
+      ticketBaseUrl: "https://example.test/?ticket=",
+      useUrlInQr: false,
+      generateId() {},
+      supabase: {},
+      eventId: "e",
+      appVersion: "1",
+    });
+    button.click();
+    await vi.waitFor(() => expect(written).toHaveLength(1));
+    const src = written[0].match(/<img src="([^"]+)"/)[1];
+    const svg = decodeURIComponent(src.slice("data:image/svg+xml;utf8,".length));
+    expect(svg).toContain("&lt;img");
+    expect(svg).not.toContain(PAYLOAD);
+  });
+});
