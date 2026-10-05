@@ -5,8 +5,10 @@ import { PARTICIPANT_STATUS, statusOf } from "../../app/labels";
 import { can, viewerOf } from "../../app/policy";
 import { PageHeader } from "../../components/PageHeader";
 import { Badge } from "../../components/Badge";
+import { DataTable } from "../../components/DataTable";
 import { api, ApiError } from "../../services/api";
 import type { CampEvent, Group, Participant } from "../../services/types";
+import { EmptyState, LoadingState } from "../../components/States";
 
 export function ParticipantsPage() {
   const { eventId = "" } = useParams();
@@ -43,7 +45,7 @@ export function ParticipantsPage() {
   if (state.status !== "signed-in") return null;
   const manager = can(viewerOf(state), "event.manage", eventId);
   if (error) return <p role="alert" className="error">{error}</p>;
-  if (!participants || !event) return <p className="status">Loading participants…</p>;
+  if (!participants || !event) return <LoadingState>Loading participants…</LoadingState>;
 
   const groupName = (id: string | null) => groups.find((g) => g.id === id)?.name ?? "No group";
 
@@ -54,25 +56,20 @@ export function ParticipantsPage() {
         actions={manager ? <Link to={`/events/${eventId}/participants/new`} className="btn">Register a participant</Link> : undefined}
       />
       {participants.length === 0 ? (
-        <p className="status">No participants registered yet.</p>
+        <EmptyState>No participants registered yet.</EmptyState>
       ) : (
-        <table className="table">
-          <thead>
-            <tr><th>Name</th><th>Group</th><th>Status</th></tr>
-          </thead>
-          <tbody>
-            {participants.map((p) => {
-              const status = statusOf(PARTICIPANT_STATUS, p.status);
-              return (
-                <tr key={p.id}>
-                  <td data-label="Name"><Link to={`/event-participants/${p.id}`}>{p.fullName}</Link></td>
-                  <td data-label="Group">{groupName(p.groupId)}</td>
-                  <td data-label="Status"><Badge tone={status.tone}>{status.label}</Badge></td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+        <DataTable
+          label="Participants"
+          columns={["Name", "Group", "Status"]}
+          rows={participants.map((p) => {
+            const status = statusOf(PARTICIPANT_STATUS, p.status);
+            return [
+              <Link key="name" to={`/event-participants/${p.id}`}>{p.fullName}</Link>,
+              groupName(p.groupId),
+              <Badge key="status" tone={status.tone}>{status.label}</Badge>,
+            ];
+          })}
+        />
       )}
     </section>
   );

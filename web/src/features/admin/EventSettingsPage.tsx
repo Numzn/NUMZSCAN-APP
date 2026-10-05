@@ -6,6 +6,7 @@ import { Badge } from "../../components/Badge";
 import { PageHeader } from "../../components/PageHeader";
 import { api } from "../../services/api";
 import type { CampEvent } from "../../services/types";
+import { LoadingState } from "../../components/States";
 
 type Settings = Pick<CampEvent, "name" | "status" | "timezone" | "startsOn" | "endsOn">;
 
@@ -34,7 +35,7 @@ export function EventSettingsPage() {
   }, [eventId]);
 
   if (loadError) return <p role="alert" className="error">{loadError}</p>;
-  if (!event || !form) return <p className="status">Loading event…</p>;
+  if (!event || !form) return <LoadingState>Loading event…</LoadingState>;
 
   const set = <K extends keyof Settings>(key: K, value: Settings[K]) => setForm({ ...form, [key]: value });
 

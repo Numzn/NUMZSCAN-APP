@@ -1,0 +1,218 @@
+/* Shared components and page patterns. Colours, sizes, and radii come from tokens.css only. */
+
+/* Page header: breadcrumbs, title, description, badge, and actions */
+.page-header { display: grid; gap: var(--space-2); margin-bottom: var(--space-2); }
+.page-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: var(--space-3) var(--space-4); }
+.page-title { display: grid; gap: var(--space-1); min-width: 0; }
+.page-title-line { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); }
+.page-title-line h1 { overflow-wrap: anywhere; }
+.page-title .meta { margin-top: var(--space-1); }
+.page-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+
+.meta { color: var(--color-text-secondary); font-size: var(--text-helper); }
+.code { font-family: var(--font-mono); font-size: 12px; margin-left: var(--space-2); }
+.block { display: block; }
+
+/* Breadcrumbs: the trail back up the structure. The last item is the current page. */
+.breadcrumbs { font-size: 14px; min-width: 0; }
+.breadcrumbs ol { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-1) var(--space-2); margin: 0; padding: 0; list-style: none; color: var(--color-text-muted); }
+.breadcrumbs li { display: flex; align-items: center; gap: var(--space-2); min-width: 0; }
+.breadcrumbs li + li::before { content: "/"; color: var(--color-border-strong); }
+.breadcrumbs a { color: var(--color-text-secondary); font-weight: var(--weight-medium); }
+.breadcrumbs a:hover { color: var(--color-primary); }
+.breadcrumbs [aria-current="page"] { color: var(--color-text); font-weight: var(--weight-semibold); overflow-wrap: anywhere; }
+
+/* Buttons. Primary is for the page's main action; secondary and danger are quieter; ghost is for light actions. */
+button, .btn, .btn-secondary, .btn-danger, .btn-ghost {
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2);
+  min-height: 40px; padding: 0 var(--space-4);
+  font: inherit; font-size: 14px; font-weight: var(--weight-semibold); line-height: 1;
+  color: #fff; background: var(--color-primary);
+  border: 1px solid transparent; border-radius: var(--radius-control);
+  text-decoration: none; cursor: pointer; white-space: nowrap;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+button:hover, .btn:hover { background: var(--color-primary-hover); color: #fff; text-decoration: none; }
+.btn-secondary { color: var(--color-primary); background: var(--color-surface); border-color: var(--color-border-strong); }
+.btn-secondary:hover { background: var(--color-primary-soft); color: var(--color-primary-hover); }
+.btn-danger { color: var(--color-danger); background: var(--color-surface); border-color: #e7aaa5; }
+.btn-danger:hover { background: var(--color-danger-soft); color: var(--color-danger); }
+.btn-ghost { color: var(--color-text-secondary); background: transparent; border-color: transparent; }
+.btn-ghost:hover { background: var(--color-surface-subtle); color: var(--color-text); }
+button:disabled, .btn:disabled, .btn-secondary:disabled, .btn-danger:disabled { opacity: 0.55; cursor: not-allowed; }
+
+.icon-button {
+  display: none; align-items: center; justify-content: center;
+  width: 40px; min-width: 40px; height: 40px; min-height: 40px; padding: 0;
+  color: var(--color-text); background: transparent; border: 1px solid var(--color-border);
+}
+.icon-button:hover { background: var(--color-surface-subtle); color: var(--color-text); }
+.icon-button span { display: block; width: 18px; height: 2px; background: currentColor; box-shadow: 0 -6px 0 currentColor, 0 6px 0 currentColor; }
+@media (max-width: 1099px) { .icon-button { display: inline-flex; } }
+
+/* Badges: a tone and a word. Colour is never the only signal. */
+.badges { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.badge {
+  display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 999px;
+  font-size: 12px; font-weight: var(--weight-semibold); line-height: 1.4; white-space: nowrap;
+}
+.badge-green { background: var(--color-success-soft); color: var(--color-success); }
+.badge-amber { background: var(--color-warning-soft); color: var(--color-warning); }
+.badge-red { background: var(--color-danger-soft); color: var(--color-danger); }
+.badge-blue { background: var(--color-info-soft); color: var(--color-info); }
+.badge-grey { background: var(--color-neutral-soft); color: var(--color-neutral); }
+
+/* Cards: content containers inside the workspace */
+.card {
+  margin-top: var(--space-4);
+  padding: var(--space-5) var(--space-6);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  min-width: 0;
+}
+.card > h2:first-child { margin-top: 0; }
+.card-header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-3); margin-bottom: var(--space-4); }
+.card-header h2 { font-size: var(--text-card-title); }
+.card-footer { margin-top: var(--space-4); padding-top: var(--space-4); border-top: 1px solid var(--color-border); }
+
+.metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: var(--space-3); margin-top: var(--space-4); }
+.metric { display: grid; gap: var(--space-1); padding: var(--space-4) var(--space-5); background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-card); }
+.metric-label { font-size: var(--text-helper); color: var(--color-text-secondary); }
+.metric-value { font-size: 26px; font-weight: var(--weight-bold); color: var(--color-text); }
+
+/* Facts: label and value pairs */
+.facts { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: var(--space-3) var(--space-6); margin-top: var(--space-4); }
+.facts dt { font-size: var(--text-helper); font-weight: var(--weight-semibold); color: var(--color-text-secondary); }
+.facts dd { margin: 0; overflow-wrap: anywhere; }
+
+/* Event context: a header card for the event, then underlined sections */
+.event-shell { display: grid; gap: var(--space-4); min-width: 0; }
+.event-header {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-2) var(--space-4);
+  padding: var(--space-4) var(--space-5); background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-card);
+}
+.event-header .event-name { font-size: var(--text-section); font-weight: 650; overflow-wrap: anywhere; }
+.event-header .meta { margin-top: 2px; }
+.event-body { min-width: 0; }
+
+.tabs {
+  display: flex; gap: var(--space-1); overflow-x: auto; max-width: 100%;
+  border-bottom: 1px solid var(--color-border); scrollbar-width: thin;
+}
+.tabs a {
+  flex: 0 0 auto; padding: var(--space-3) var(--space-3); margin-bottom: -1px;
+  color: var(--color-text-secondary); font-weight: var(--weight-semibold); white-space: nowrap;
+  border-bottom: 2px solid transparent;
+}
+.tabs a:hover { color: var(--color-text); text-decoration: none; }
+.tabs a[aria-current="page"] { color: var(--color-primary); border-bottom-color: var(--color-primary); }
+
+/* Lists */
+.event-list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-2); }
+.event-card {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-2) var(--space-4);
+  padding: var(--space-4) var(--space-5); background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-card);
+}
+.event-card:hover { border-color: var(--color-border-strong); }
+.event-card-main { display: grid; gap: 2px; min-width: 0; }
+.event-card-main a { font-size: var(--text-card-title); }
+.plain-list { list-style: none; margin: var(--space-3) 0 0; padding: 0; }
+.plain-list li { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-3); padding: var(--space-3) 0; border-bottom: 1px solid var(--color-border); }
+.plain-list li:last-child { border-bottom: 0; }
+.credential-list { list-style: none; margin: 0 0 var(--space-4); padding: 0; display: grid; gap: var(--space-2); }
+.credential-list li {
+  display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-3);
+  padding: var(--space-3) var(--space-4); background: var(--color-surface-subtle); border: 1px solid var(--color-border); border-radius: var(--radius-control);
+}
+.token-hint { font-family: var(--font-mono); font-size: 14px; }
+.row-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); margin-left: auto; }
+.row-actions button { min-height: 36px; }
+
+/* Data tables. Desktop: a plain table. Phone: each row becomes a labelled block (see the phone rules). */
+.table-wrap { min-width: 0; }
+.table { width: 100%; border-collapse: collapse; margin-top: var(--space-3); }
+.table th {
+  padding: var(--space-3) var(--space-3); text-align: left;
+  font-size: var(--text-label); font-weight: var(--weight-semibold); color: var(--color-text-secondary);
+  border-bottom: 1px solid var(--color-border);
+}
+.table td { padding: var(--space-3) var(--space-3); text-align: left; vertical-align: middle; border-bottom: 1px solid var(--color-border); }
+.table tbody tr:hover { background: var(--color-surface-subtle); }
+.table a:focus-visible { border-radius: var(--radius-control); }
+.row-actions-cell { text-align: right; white-space: nowrap; }
+
+/* Forms: visible labels, stacked by default, one primary action */
+.form { display: grid; gap: var(--space-4); max-width: 36rem; margin-top: var(--space-4); }
+.form.inline { grid-template-columns: minmax(0, 1fr) auto; align-items: end; max-width: none; }
+.form-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--space-2); }
+.checkbox { display: flex; align-items: center; gap: var(--space-2); font-weight: var(--weight-semibold); }
+.toolbar { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--space-3) var(--space-4); margin-top: var(--space-4); }
+.toolbar label { flex: 1 1 14rem; min-width: 0; max-width: 100%; }
+
+/* Feedback: notices (success), errors (danger), status (quiet) */
+.notice, .error {
+  margin: var(--space-3) 0; padding: var(--space-3) var(--space-4); border-radius: var(--radius-control);
+  font-weight: var(--weight-semibold); border: 1px solid transparent;
+}
+.notice { background: var(--color-success-soft); color: var(--color-success); border-color: #bfe0cd; }
+.error { background: var(--color-danger-soft); color: var(--color-danger); border-color: #f0bcb7; }
+.status { color: var(--color-text-secondary); }
+
+/* States: loading, empty, and error are shown the same way on every page */
+.state { padding: var(--space-6) 0; color: var(--color-text-secondary); }
+.state-empty {
+  margin-top: var(--space-4); padding: var(--space-8) var(--space-6); text-align: center;
+  border: 1px dashed var(--color-border-strong); border-radius: var(--radius-card); background: var(--color-surface);
+}
+
+/* Not found */
+.not-found { margin-top: var(--space-4); padding: var(--space-8) var(--space-6); background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-card); }
+.not-found h1 { font-size: var(--text-section); margin-bottom: var(--space-2); }
+
+/* Administration pages: stacked sections inside the workspace */
+.admin-body { min-width: 0; }
+
+/* The participant's pass: a ticket for scanning, framed so it prints cleanly */
+.pass {
+  margin-top: var(--space-5); max-width: 22rem; padding: var(--space-5) var(--space-5) var(--space-4);
+  display: grid; justify-items: start; gap: var(--space-1);
+  background: var(--color-surface); border: 1px solid var(--color-border); border-top: 6px solid var(--color-accent);
+  border-radius: var(--radius-card); box-shadow: var(--shadow-card);
+}
+.pass-event { font-size: 12px; font-weight: var(--weight-semibold); letter-spacing: 0.08em; text-transform: uppercase; color: var(--color-text-secondary); }
+.pass-name { font-size: 22px; font-weight: var(--weight-bold); line-height: 1.2; overflow-wrap: anywhere; }
+.pass-group { color: var(--color-text-secondary); }
+.pass img { display: block; width: 100%; max-width: 260px; height: auto; margin: var(--space-3) auto var(--space-2); padding: var(--space-2); background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-control); }
+.pass-note { margin: var(--space-1) 0 var(--space-2); font-size: var(--text-helper); color: var(--color-text-secondary); }
+
+/* Sign-in: the one place a centred card is used, because there is no application around it yet */
+.login {
+  max-width: 24rem; margin: var(--space-16) auto; padding: var(--space-8) var(--space-8) var(--space-6);
+  background: var(--color-surface); border: 1px solid var(--color-border); border-top: 4px solid var(--color-primary);
+  border-radius: var(--radius-card); box-shadow: var(--shadow-card);
+}
+.login form { display: grid; gap: var(--space-4); margin-top: var(--space-4); }
+.login button { width: 100%; }
+
+/* Phone: tables become labelled blocks, the event tabs scroll, and forms stack */
+@media (max-width: 640px) {
+  h1 { font-size: 24px; }
+  .facts { grid-template-columns: minmax(0, 1fr); gap: var(--space-1); }
+  .facts dt { margin-top: var(--space-2); }
+  .form.inline { grid-template-columns: minmax(0, 1fr); }
+  .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .card { padding: var(--space-4); }
+  .event-header { padding: var(--space-3) var(--space-4); }
+  .table thead { display: none; }
+  .table, .table tbody, .table tr, .table td { display: block; width: 100%; }
+  .table tr { padding: var(--space-3) 0; border-bottom: 1px solid var(--color-border); }
+  .table td { display: grid; grid-template-columns: minmax(84px, 30%) minmax(0, 1fr); gap: var(--space-2); padding: 4px 0; border: 0; }
+  .table td::before { content: attr(data-label); font-size: var(--text-helper); font-weight: var(--weight-semibold); color: var(--color-text-secondary); }
+  .row-actions-cell { text-align: left; white-space: normal; }
+  .row-actions { margin-left: 0; }
+  .form-actions { justify-content: stretch; }
+  .form-actions button { flex: 1 1 auto; }
+  .login { margin: var(--space-8) auto; padding: var(--space-6) var(--space-5); }
+}

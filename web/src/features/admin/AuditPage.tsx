@@ -4,6 +4,7 @@ import { PageHeader } from "../../components/PageHeader";
 import { api } from "../../services/api";
 import type { AuditEntry, CampEvent } from "../../services/types";
 import { AUDIT_ACTIONS, actionLabel, describeEntry } from "./auditText";
+import { EmptyState, LoadingState } from "../../components/States";
 
 export function AuditPage() {
   const [entries, setEntries] = useState<AuditEntry[] | null>(null);
@@ -82,8 +83,8 @@ export function AuditPage() {
       </div>
 
       {error && <p role="alert" className="error">{error}</p>}
-      {!entries && !error && <p className="status">Loading the audit log…</p>}
-      {entries && entries.length === 0 && <p className="status">No entries match these filters.</p>}
+      {!entries && !error && <LoadingState>Loading the audit log…</LoadingState>}
+      {entries && entries.length === 0 && <EmptyState>No entries match these filters.</EmptyState>}
       {entries && entries.length > 0 && (
         <>
           <table className="table">

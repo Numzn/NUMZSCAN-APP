@@ -5,6 +5,7 @@ import { can, viewerOf } from "../../app/policy";
 import { PageHeader } from "../../components/PageHeader";
 import { api, ApiError } from "../../services/api";
 import type { CampEvent, Group, GroupKind } from "../../services/types";
+import { EmptyState, LoadingState } from "../../components/States";
 
 const KIND_LABEL: Record<GroupKind, string> = { church: "Church", dorm: "Dormitory", team: "Team" };
 
@@ -56,13 +57,13 @@ export function GroupsPage() {
   }
 
   if (error && !groups) return <p role="alert" className="error">{error}</p>;
-  if (!groups || !event) return <p className="status">Loading groups…</p>;
+  if (!groups || !event) return <LoadingState>Loading groups…</LoadingState>;
 
   return (
     <section>
       <PageHeader title="Groups" />
       {groups.length === 0 ? (
-        <p className="status">No groups yet.</p>
+        <EmptyState>No groups yet.</EmptyState>
       ) : (
         <ul className="plain-list">
           {groups.map((g) => (

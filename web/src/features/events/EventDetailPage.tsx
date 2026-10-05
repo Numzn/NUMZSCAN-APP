@@ -5,6 +5,7 @@ import { roleOn, viewerOf, type EventRole } from "../../app/policy";
 import { PageHeader } from "../../components/PageHeader";
 import { api, ApiError } from "../../services/api";
 import type { CampEvent } from "../../services/types";
+import { LoadingState } from "../../components/States";
 
 const ROLE_LABEL: Record<EventRole, string> = {
   admin: "Administrator",
@@ -36,7 +37,7 @@ export function EventDetailPage() {
   }, [eventId]);
 
   if (error) return <p role="alert" className="error">{error}</p>;
-  if (!event) return <p className="status">Loading event…</p>;
+  if (!event) return <LoadingState>Loading event…</LoadingState>;
 
   const role = roleOn(viewerOf(state), event.id);
 

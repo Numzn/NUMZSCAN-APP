@@ -5,6 +5,7 @@ import { Badge } from "../../components/Badge";
 import { PageHeader } from "../../components/PageHeader";
 import { api } from "../../services/api";
 import type { AdminUser } from "../../services/types";
+import { EmptyState, LoadingState } from "../../components/States";
 
 const MIN_PASSWORD = 12;
 
@@ -118,12 +119,12 @@ export function UsersPage() {
       </div>
 
       {loadError && <p role="alert" className="error">{loadError}</p>}
-      {!users && !loadError && <p className="status">Loading users…</p>}
+      {!users && !loadError && <LoadingState>Loading users…</LoadingState>}
       {users && (
         <>
           <p className="meta">{total} {total === 1 ? "user" : "users"}</p>
           {users.length === 0 ? (
-            <p className="status">No users match.</p>
+            <EmptyState>No users match.</EmptyState>
           ) : (
             <table className="table">
               <thead>

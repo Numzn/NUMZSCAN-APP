@@ -1,0 +1,61 @@
+/* Base rules: reset, typography, focus, and form controls. */
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: var(--font-sans);
+  font-size: var(--text-body);
+  line-height: 1.5;
+  color: var(--color-text);
+  background: var(--color-background);
+}
+
+:root.drawer-open { overflow: hidden; }
+
+h1, h2, h3, p { margin: 0; }
+h1 { font-size: var(--text-page); line-height: 1.2; font-weight: var(--weight-bold); letter-spacing: -0.01em; }
+h2 { font-size: var(--text-section); line-height: 1.3; font-weight: 650; }
+h3 { font-size: var(--text-card-title); line-height: 1.35; font-weight: 650; }
+
+a { color: var(--color-primary); font-weight: var(--weight-semibold); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+:focus-visible { outline: none; box-shadow: var(--focus-ring); border-radius: var(--radius-control); }
+/* The page heading takes focus when a page appears so screen readers start there. It is not a control, so it shows no ring. */
+h1[tabindex="-1"]:focus, h1[tabindex="-1"]:focus-visible { outline: none; box-shadow: none; }
+
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+.skip-link {
+  position: absolute; left: var(--space-4); top: var(--space-2); z-index: 100;
+  padding: var(--space-2) var(--space-4); background: var(--color-surface); color: var(--color-primary);
+  border-radius: var(--radius-control); box-shadow: var(--shadow-overlay); transform: translateY(-200%);
+}
+.skip-link:focus { transform: translateY(0); }
+
+label {
+  display: grid; gap: var(--space-1); min-width: 0;
+  font-size: var(--text-label); font-weight: var(--weight-semibold); color: var(--color-text);
+}
+
+input, select, textarea {
+  width: 100%; min-width: 0; max-width: 100%;
+  min-height: 40px; padding: var(--space-2) var(--space-3);
+  font: inherit; font-weight: var(--weight-regular); color: var(--color-text);
+  background: var(--color-surface); border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-control);
+}
+input:focus, select:focus, textarea:focus {
+  outline: none; border-color: var(--color-primary); box-shadow: var(--focus-ring);
+}
+input[type="checkbox"] { width: 18px; min-height: 18px; height: 18px; padding: 0; accent-color: var(--color-primary); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation: none !important; scroll-behavior: auto !important; }
+}

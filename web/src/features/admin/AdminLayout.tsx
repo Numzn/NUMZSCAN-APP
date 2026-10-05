@@ -1,18 +1,10 @@
-import { NavLink, Outlet } from "react-router-dom";
+import { Outlet } from "react-router-dom";
 
-// Sidebar on desktop, a row of tabs on a phone (see styles.css).
+// Administration pages sit in the application workspace. Their navigation is the sidebar's Administration section.
 export function AdminLayout() {
   return (
-    <div className="admin">
-      <nav className="admin-nav" aria-label="Administration">
-        <NavLink to="/admin" end>Overview</NavLink>
-        <NavLink to="/admin/users">Users</NavLink>
-        <NavLink to="/admin/events">Events</NavLink>
-        <NavLink to="/admin/audit">Audit log</NavLink>
-      </nav>
-      <div className="admin-body">
-        <Outlet />
-      </div>
+    <div className="admin-body">
+      <Outlet />
     </div>
   );
 }

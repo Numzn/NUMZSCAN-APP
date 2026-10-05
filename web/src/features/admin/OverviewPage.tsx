@@ -4,6 +4,7 @@ import { PageHeader } from "../../components/PageHeader";
 import { api, ApiError } from "../../services/api";
 import type { AuditEntry, Overview } from "../../services/types";
 import { actionLabel, describeEntry } from "./auditText";
+import { EmptyState, LoadingState } from "../../components/States";
 
 export function OverviewPage() {
   const [overview, setOverview] = useState<Overview | null>(null);
@@ -30,7 +31,7 @@ export function OverviewPage() {
   }, []);
 
   if (error) return <p role="alert" className="error">{error}</p>;
-  if (!overview) return <p className="status">Loading overview…</p>;
+  if (!overview) return <LoadingState>Loading overview…</LoadingState>;
 
   const counters: [string, number][] = [
     ["Active accounts", overview.activeUsers],
@@ -57,7 +58,7 @@ export function OverviewPage() {
           <Link to="/admin/audit">All entries</Link>
         </div>
         {recent.length === 0 ? (
-          <p className="status">No changes recorded yet.</p>
+          <EmptyState>No changes recorded yet.</EmptyState>
         ) : (
           <ul className="plain-list">
             {recent.map((entry) => (

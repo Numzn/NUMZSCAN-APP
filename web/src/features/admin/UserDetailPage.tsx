@@ -6,6 +6,7 @@ import { Badge } from "../../components/Badge";
 import { PageHeader } from "../../components/PageHeader";
 import { api } from "../../services/api";
 import type { AdminUserDetail } from "../../services/types";
+import { EmptyState, LoadingState } from "../../components/States";
 
 const MIN_PASSWORD = 12;
 
@@ -48,7 +49,7 @@ export function UserDetailPage() {
   }, [userId, version]);
 
   if (loadError) return <p role="alert" className="error">{loadError}</p>;
-  if (!user) return <p className="status">Loading user…</p>;
+  if (!user) return <LoadingState>Loading user…</LoadingState>;
 
   const self = me?.id === user.id;
 
@@ -137,7 +138,7 @@ export function UserDetailPage() {
       <div className="card">
         <h2>Event access</h2>
         {user.access.length === 0 ? (
-          <p className="status">No event access yet.</p>
+          <EmptyState>No event access yet.</EmptyState>
         ) : (
           <ul className="plain-list">
             {user.access.map((a) => (

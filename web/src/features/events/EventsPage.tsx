@@ -5,6 +5,7 @@ import { PageHeader } from "../../components/PageHeader";
 import { EVENT_STATUS, statusOf } from "../../app/labels";
 import { api, ApiError } from "../../services/api";
 import type { CampEvent } from "../../services/types";
+import { EmptyState, LoadingState } from "../../components/States";
 
 export function EventsPage() {
   const [events, setEvents] = useState<CampEvent[] | null>(null);
@@ -27,8 +28,8 @@ export function EventsPage() {
   }, []);
 
   if (error) return <p role="alert" className="error">{error}</p>;
-  if (!events) return <p className="status">Loading events…</p>;
-  if (events.length === 0) return <p className="status">No events yet.</p>;
+  if (!events) return <LoadingState>Loading events…</LoadingState>;
+  if (events.length === 0) return <EmptyState>No events yet.</EmptyState>;
 
   return (
     <section>

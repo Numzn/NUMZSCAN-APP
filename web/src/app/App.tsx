@@ -1,6 +1,6 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { RequireAuth } from "../components/RequireAuth";
-import { Layout } from "../components/Layout";
+import { AppShell } from "../components/shell/AppShell";
 import { NotFound } from "../components/NotFound";
 import { LoginPage } from "../features/auth/LoginPage";
 import { EventCreatePage } from "../features/events/EventCreatePage";
@@ -32,7 +32,7 @@ export function App() {
           <Route
             element={
               <RequireAuth>
-                <Layout />
+                <AppShell />
               </RequireAuth>
             }
           >

@@ -1,0 +1,8 @@
+/* Printing: only the participant's pass is printed, on a plain page. */
+@media print {
+  .sidebar, .topbar, .drawer-backdrop, .breadcrumbs, .tabs, .event-header, .page-header,
+  .card, .toolbar, .no-print, .notice, .error, .status { display: none !important; }
+  .app-shell, .workspace, .workspace-inner { display: block; background: #fff; padding: 0; margin: 0; max-width: none; }
+  .pass { border: 2px solid #000; border-top-width: 2px; box-shadow: none; break-inside: avoid; margin: 0; }
+  .pass img { border: 0; }
+}

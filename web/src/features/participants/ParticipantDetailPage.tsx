@@ -9,6 +9,7 @@ import { QrPass } from "../credentials/QrPass";
 import { isCredentialToken } from "../credentials/pass";
 import { api, ApiError } from "../../services/api";
 import type { CampEvent, Credential, Group, Participant } from "../../services/types";
+import { EmptyState, LoadingState } from "../../components/States";
 
 interface ShownPass {
   token: string;
@@ -62,7 +63,7 @@ export function ParticipantDetailPage() {
 
   if (state.status !== "signed-in") return null;
   if (error) return <p role="alert" className="error">{error}</p>;
-  if (!participant || !event) return <p className="status">Loading participant…</p>;
+  if (!participant || !event) return <LoadingState>Loading participant…</LoadingState>;
 
   const viewer = viewerOf(state);
   const role = roleOn(viewer, participant.eventId);
@@ -153,7 +154,7 @@ export function ParticipantDetailPage() {
       <div className="card">
         <h2>Credential</h2>
         {credentials.length === 0 ? (
-          <p className="status">No credential issued yet.</p>
+          <EmptyState>No credential issued yet.</EmptyState>
         ) : (
           <ul className="credential-list">
             {credentials.map((c) => {

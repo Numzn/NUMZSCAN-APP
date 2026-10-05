@@ -6,6 +6,7 @@ import { can, viewerOf } from "../../app/policy";
 import { PageHeader } from "../../components/PageHeader";
 import { api, ApiError } from "../../services/api";
 import type { AccessRow, AdminUser, CampEvent } from "../../services/types";
+import { EmptyState, LoadingState } from "../../components/States";
 
 type Role = "event_manager" | "staff";
 const ROLE_LABEL: Record<Role, string> = { event_manager: "Event manager", staff: "Staff" };
@@ -65,7 +66,7 @@ export function AccessPage() {
   }, [isAdmin, search]);
 
   if (loadError) return <p role="alert" className="error">{loadError}</p>;
-  if (!event || !rows) return <p className="status">Loading access…</p>;
+  if (!event || !rows) return <LoadingState>Loading access…</LoadingState>;
 
   const onList = new Set(rows.map((r) => r.userId));
   const addable = candidates.filter((u) => !onList.has(u.id));
@@ -111,7 +112,7 @@ export function AccessPage() {
       {actionError && <p role="alert" className="error">{actionError}</p>}
 
       {rows.length === 0 ? (
-        <p className="status">No one has access to this event yet.</p>
+        <EmptyState>No one has access to this event yet.</EmptyState>
       ) : (
         <table className="table">
           <thead>

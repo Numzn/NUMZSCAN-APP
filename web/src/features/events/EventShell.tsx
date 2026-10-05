@@ -8,6 +8,7 @@ import { Breadcrumbs, type Crumb } from "../../components/Breadcrumbs";
 import { NavTabs, type Tab } from "../../components/NavTabs";
 import { api, ApiError } from "../../services/api";
 import type { CampEvent } from "../../services/types";
+import { LoadingState } from "../../components/States";
 
 // Wraps every page of one event: its name, dates, status, breadcrumbs, and sections.
 export function EventShell() {
@@ -30,7 +31,7 @@ export function EventShell() {
   }, [eventId]);
 
   if (error) return <p role="alert" className="error">{error}</p>;
-  if (!event) return <p className="status">Loading event…</p>;
+  if (!event) return <LoadingState>Loading event…</LoadingState>;
 
   const base = `/events/${eventId}`;
   const section = pathname.slice(base.length);

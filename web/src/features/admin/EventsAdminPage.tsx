@@ -6,6 +6,7 @@ import { Badge } from "../../components/Badge";
 import { PageHeader } from "../../components/PageHeader";
 import { api } from "../../services/api";
 import type { CampEvent } from "../../services/types";
+import { EmptyState, LoadingState } from "../../components/States";
 
 export function EventsAdminPage() {
   const [events, setEvents] = useState<CampEvent[] | null>(null);
@@ -23,13 +24,13 @@ export function EventsAdminPage() {
   }, []);
 
   if (error) return <p role="alert" className="error">{error}</p>;
-  if (!events) return <p className="status">Loading events…</p>;
+  if (!events) return <LoadingState>Loading events…</LoadingState>;
 
   return (
     <section>
       <PageHeader title="Events" actions={<Link to="/events/new" className="btn">New event</Link>} />
       {events.length === 0 ? (
-        <p className="status">No events yet.</p>
+        <EmptyState>No events yet.</EmptyState>
       ) : (
         <table className="table">
           <thead>
