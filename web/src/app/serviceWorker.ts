@@ -1,4 +1,4 @@
-// Registers the offline shell worker (public/service-worker.js). It only runs in the production build,
+// Registers the offline shell worker (web/public/service-worker.js). It only runs in the production build,
 // and a failed registration never stops the app, because the app works fine without it.
 export function registerServiceWorker(
   container: Pick<ServiceWorkerContainer, "register"> | undefined,
