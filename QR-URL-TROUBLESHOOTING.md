@@ -36,17 +36,7 @@ if (ticketId) {
 ```
 
 ## Dev/Test Utilities
-The following HTML pages are for development only. The server no longer serves them, so they are not reachable on the normal URL. Their files are still in `public/` and should be deleted with `git rm` before the next release.
-- `debug-qr-content.html`
-- `test-normal-scan.html`
-- `simulate-website.html`
-- `test-url.html`
-- `verify-setup.html`
-
-Use them to:
-- Debug QR content (`debug-qr-content.html`).
-- Dry-run the normal-camera flow (`test-normal-scan.html`).
-- Simulate the program website (`simulate-website.html`).
+The dev and debug pages (`debug-qr-content.html`, `test-normal-scan.html`, `simulate-website.html`, `test-url.html`, `verify-setup.html`, `test-ticket-local.html`) have been removed from `public/`. They remain in git history, in commits before the removal, if you need them again.
 
 ## Residual Tips
 - If problems persist in a specific browser, test in incognito / private mode to bypass cached scripts.
