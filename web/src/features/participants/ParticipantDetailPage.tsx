@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useAuth } from "../../app/AuthContext";
+import { CREDENTIAL_STATUS, PARTICIPANT_STATUS, statusOf } from "../../app/labels";
 import { canIssue, canManage, roleFor } from "../../app/roles";
+import { Badge } from "../../components/Badge";
 import { QrPass } from "../credentials/QrPass";
 import { isCredentialToken } from "../credentials/pass";
 import { api, ApiError } from "../../services/api";
@@ -66,6 +68,7 @@ export function ParticipantDetailPage() {
   const issuer = canIssue(role);
   const activeCredential = credentials.find((c) => c.status === "active") ?? null;
   const currentGroup = groups.find((g) => g.id === participant.groupId)?.name ?? null;
+  const participantStatus = statusOf(PARTICIPANT_STATUS, participant.status);
 
   async function run(action: () => Promise<void>) {
     setError(null);
@@ -113,17 +116,20 @@ export function ParticipantDetailPage() {
 
   return (
     <section>
-      <p><Link to={`/events/${participant.eventId}/participants`}>← Participants</Link></p>
-      <h1>{participant.fullName}</h1>
-      <dl className="facts">
+      <p><Link to={`/events/${participant.eventId}/participants`} className="back-link">← Participants</Link></p>
+      <div className="page-head">
+        <h1>{participant.fullName}</h1>
+        <Badge tone={participantStatus.tone}>{participantStatus.label}</Badge>
+      </div>
+
+      <dl className="facts card">
         <dt>Event</dt><dd>{event.name}</dd>
         <dt>Group</dt><dd>{currentGroup ?? "No group"}</dd>
-        <dt>Status</dt><dd>{participant.status}</dd>
         <dt>Your role</dt><dd>{role === "admin" ? "Administrator" : role === "event_manager" ? "Event manager" : role === "staff" ? "Staff" : "No role"}</dd>
       </dl>
 
       {manager && (
-        <div className="form inline">
+        <div className="card toolbar">
           <label>
             Group
             <select value={groupChoice} onChange={(e) => setGroupChoice(e.target.value)}>
@@ -133,31 +139,40 @@ export function ParticipantDetailPage() {
               ))}
             </select>
           </label>
-          <button type="button" onClick={saveGroup} disabled={busy}>Save group</button>
+          <button type="button" className="btn-secondary" onClick={saveGroup} disabled={busy}>Save group</button>
         </div>
       )}
 
-      <h2>Credential</h2>
-      {credentials.length === 0 ? (
-        <p className="status">No credential issued yet.</p>
-      ) : (
-        <ul className="plain-list">
-          {credentials.map((c) => (
-            <li key={c.id}>
-              <span className="meta">…{c.tokenHint}</span> · {c.status} · issued {new Date(c.issuedAt).toLocaleDateString()}
-              {c.status === "active" && issuer && (
-                <button type="button" onClick={() => replace(c.id)} disabled={busy}>Replace</button>
-              )}
-              {c.status === "active" && manager && (
-                <button type="button" onClick={() => revoke(c.id)} disabled={busy}>Revoke</button>
-              )}
-            </li>
-          ))}
-        </ul>
-      )}
-      {!activeCredential && issuer && participant.status !== "cancelled" && (
-        <button type="button" onClick={issue} disabled={busy}>Issue credential</button>
-      )}
+      <div className="card">
+        <h2>Credential</h2>
+        {credentials.length === 0 ? (
+          <p className="status">No credential issued yet.</p>
+        ) : (
+          <ul className="credential-list">
+            {credentials.map((c) => {
+              const status = statusOf(CREDENTIAL_STATUS, c.status);
+              return (
+                <li key={c.id}>
+                  <span className="token-hint">…{c.tokenHint}</span>
+                  <Badge tone={status.tone}>{status.label}</Badge>
+                  <span className="meta">issued {new Date(c.issuedAt).toLocaleDateString()}</span>
+                  <span className="row-actions">
+                    {c.status === "active" && issuer && (
+                      <button type="button" className="btn-secondary" onClick={() => replace(c.id)} disabled={busy}>Replace</button>
+                    )}
+                    {c.status === "active" && manager && (
+                      <button type="button" className="btn-danger" onClick={() => revoke(c.id)} disabled={busy}>Revoke</button>
+                    )}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+        {!activeCredential && issuer && participant.status !== "cancelled" && (
+          <button type="button" className="btn" onClick={issue} disabled={busy}>Issue credential</button>
+        )}
+      </div>
 
       {notice && <p role="status" className="notice">{notice}</p>}
       {error && <p role="alert" className="error">{error}</p>}

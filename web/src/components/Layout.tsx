@@ -1,5 +1,10 @@
-import { Link, Outlet, useNavigate } from "react-router-dom";
+import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "../app/AuthContext";
+
+function initials(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  return parts.slice(0, 2).map((p) => p[0]!.toUpperCase()).join("");
+}
 
 export function Layout() {
   const { state, signOut } = useAuth();
@@ -14,14 +19,20 @@ export function Layout() {
   return (
     <div className="shell">
       <header className="topbar">
-        <Link to="/" className="brand">EventPass</Link>
-        <nav>
-          <Link to="/">Events</Link>
-          {state.status === "signed-in" && state.user.isAdmin && <Link to="/events/new">New event</Link>}
+        <NavLink to="/" end className="brand">
+          <span className="brand-mark" aria-hidden="true">E</span>
+          EventPass
+        </NavLink>
+        <nav className="topnav" aria-label="Main">
+          <NavLink to="/" end>Events</NavLink>
+          {state.status === "signed-in" && state.user.isAdmin && <NavLink to="/events/new">New event</NavLink>}
         </nav>
         <div className="account">
-          <span>{displayName}</span>
-          <button type="button" onClick={handleSignOut}>Sign out</button>
+          {displayName && (
+            <span className="avatar" aria-hidden="true">{initials(displayName)}</span>
+          )}
+          <span className="account-name">{displayName}</span>
+          <button type="button" className="btn-ghost" onClick={handleSignOut}>Sign out</button>
         </div>
       </header>
       <main>

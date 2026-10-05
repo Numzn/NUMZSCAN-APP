@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useAuth } from "../../app/AuthContext";
+import { EVENT_STATUS, statusOf } from "../../app/labels";
+import { Badge } from "../../components/Badge";
 import { api, ApiError } from "../../services/api";
 import type { CampEvent, EventMembershipRole } from "../../services/types";
 
@@ -42,22 +44,31 @@ export function EventDetailPage() {
       ? ROLE_LABEL[membership.role]
       : "No role";
 
+  const status = statusOf(EVENT_STATUS, event.status);
+
   return (
     <section>
+      <p><Link to="/" className="back-link">← Events</Link></p>
       <h1>{event.name}</h1>
-      <dl className="facts">
+      <dl className="facts card">
         <dt>Dates</dt>
         <dd>{event.startsOn} to {event.endsOn}</dd>
         <dt>Timezone</dt>
         <dd>{event.timezone}</dd>
         <dt>Status</dt>
-        <dd>{event.status}</dd>
+        <dd><Badge tone={status.tone}>{status.label}</Badge></dd>
         <dt>Your role</dt>
         <dd>{yourRole}</dd>
       </dl>
       <nav className="subnav" aria-label="Event sections">
-        <Link to={`/events/${event.id}/participants`}>Participants</Link>
-        <Link to={`/events/${event.id}/groups`}>Groups</Link>
+        <Link to={`/events/${event.id}/participants`} className="tile">
+          <strong>Participants</strong>
+          <span className="meta">Register people and manage passes</span>
+        </Link>
+        <Link to={`/events/${event.id}/groups`} className="tile">
+          <strong>Groups</strong>
+          <span className="meta">Churches, dormitories and teams</span>
+        </Link>
       </nav>
     </section>
   );

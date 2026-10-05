@@ -94,7 +94,7 @@ describe("ParticipantDetailPage", () => {
     expect(mocked.replaceCredential).toHaveBeenCalledWith("c-1");
     expect(vi.mocked(QRCode.toDataURL).mock.calls.at(-1)?.[0]).toBe(TOKEN_2);
     const oldRow = screen.getByText("…AAAA").closest("li")!;
-    expect(oldRow).toHaveTextContent("replaced");
+    expect(oldRow).toHaveTextContent("Replaced");
     expect(within(oldRow).queryByRole("button")).toBeNull();
   });
 

@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useAuth } from "../../app/AuthContext";
+import { PARTICIPANT_STATUS, statusOf } from "../../app/labels";
 import { canManage, roleFor } from "../../app/roles";
+import { Badge } from "../../components/Badge";
 import { api, ApiError } from "../../services/api";
 import type { CampEvent, Group, Participant } from "../../services/types";
 
@@ -46,9 +48,11 @@ export function ParticipantsPage() {
 
   return (
     <section>
-      <p><Link to={`/events/${eventId}`}>← {event.name}</Link></p>
-      <h1>Participants</h1>
-      {manager && <p><Link to={`/events/${eventId}/participants/new`}>Register a participant</Link></p>}
+      <p><Link to={`/events/${eventId}`} className="back-link">← {event.name}</Link></p>
+      <div className="page-head">
+        <h1>Participants</h1>
+        {manager && <Link to={`/events/${eventId}/participants/new`} className="btn">Register a participant</Link>}
+      </div>
       {participants.length === 0 ? (
         <p className="status">No participants registered yet.</p>
       ) : (
@@ -57,13 +61,16 @@ export function ParticipantsPage() {
             <tr><th>Name</th><th>Group</th><th>Status</th></tr>
           </thead>
           <tbody>
-            {participants.map((p) => (
-              <tr key={p.id}>
-                <td><Link to={`/event-participants/${p.id}`}>{p.fullName}</Link></td>
-                <td>{groupName(p.groupId)}</td>
-                <td>{p.status}</td>
-              </tr>
-            ))}
+            {participants.map((p) => {
+              const status = statusOf(PARTICIPANT_STATUS, p.status);
+              return (
+                <tr key={p.id}>
+                  <td data-label="Name"><Link to={`/event-participants/${p.id}`}>{p.fullName}</Link></td>
+                  <td data-label="Group">{groupName(p.groupId)}</td>
+                  <td data-label="Status"><Badge tone={status.tone}>{status.label}</Badge></td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       )}
