@@ -7,6 +7,8 @@ services:
       PORT: 3000
       DATABASE_URL: postgresql://${NUMZSCAN_DB_USER:-numzscan}:${NUMZSCAN_DB_PASSWORD}@infra-postgres:5432/${NUMZSCAN_DB_NAME:-numzscan}
       CORS_ORIGIN: ${NUMZSCAN_CORS_ORIGIN:-}
+      # EventPass API v1 (and the React app's sign-in) is mounted only when this is set.
+      EVENTPASS_TOKEN_KEY: ${EVENTPASS_TOKEN_KEY:-}
     ports:
       # Loopback — direct host-level access.
       - "127.0.0.1:${NUMZSCAN_HTTP_PORT:-3210}:3000"

@@ -2,6 +2,9 @@
 .github
 api/node_modules
 node_modules
+web/node_modules
+web/dist
+dist
 *.md
 .env
 .env.local

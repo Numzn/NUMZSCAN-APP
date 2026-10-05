@@ -25,6 +25,7 @@ export function App() {
             }
           >
             <Route index element={<EventsPage />} />
+            <Route path="events" element={<EventsPage />} />
             <Route path="events/new" element={<EventCreatePage />} />
             <Route path="events/:eventId" element={<EventDetailPage />} />
             <Route path="events/:eventId/groups" element={<GroupsPage />} />

@@ -14,6 +14,17 @@ curl http://127.0.0.1:3210/api/health
 
 Registered in the Platform Registry (`infrastructure/platform-registry/registry.yaml`, key `numzscan`) and routed at `numzscan.lab.numz.site` via the NumzLab Gateway. Not yet published to OCI/public DNS — internal-only until that's decided.
 
+### Serving paths
+
+The normal URL serves the React EventPass app, built from `web/` into `web/dist`. The legacy ticket app is no longer served.
+
+- `/` and every React route (`/login`, `/events`, `/events/:id`, `/event-participants/:id`, ...) get the React shell.
+- `/api/v1/*` is the EventPass API. `/api/*` is the legacy tickets API. Unknown `/api` paths return JSON 404, never the shell.
+- `/fundraising.html`, `/fundraising.css`, `/obs-overlay.html`, `/data.json`, and `/ticket-page.html` are still served from the root build (`dist/`). OBS and bookmarks use these URLs.
+- `/service-worker.js` is the offline shell worker from `web/public/`. It replaces the legacy worker, which registered the same URL.
+
+`EVENTPASS_TOKEN_KEY` must be set for `/api/v1` and sign-in to work. Without it the React app loads but cannot sign in.
+
 ## 📦 Package Contents
 
 ```

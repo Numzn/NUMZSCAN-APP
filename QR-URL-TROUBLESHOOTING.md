@@ -36,7 +36,7 @@ if (ticketId) {
 ```
 
 ## Dev/Test Utilities
-The following HTML pages are for development only. They live in the project root, carry a `DEV-ONLY` banner, and can be deleted before production release.
+The following HTML pages are for development only. The server no longer serves them, so they are not reachable on the normal URL. Their files are still in `public/` and should be deleted with `git rm` before the next release.
 - `debug-qr-content.html`
 - `test-normal-scan.html`
 - `simulate-website.html`

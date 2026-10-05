@@ -11,8 +11,8 @@ export default defineConfig({
     outDir: "dist",
     emptyOutDir: true,
     rollupOptions: {
+      // The legacy ticket app (index.html) is no longer built. The React app in web/ replaces it.
       input: {
-        index: resolve(root, "index.html"),
         fundraising: resolve(root, "fundraising.html"),
         obsOverlay: resolve(root, "obs-overlay.html"),
       },
