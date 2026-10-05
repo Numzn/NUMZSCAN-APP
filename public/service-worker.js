@@ -1,4 +1,4 @@
-const CACHE_NAME = 'offline-qr-v9'; // Vite build: hashed chunks cached at runtime; precache lists stable entries only
+const CACHE_NAME = 'offline-qr-v10'; // API GETs bypass the cache (stale sync reads); v10 purges API entries cached by v9
 
 // Get the base path from the service worker location
 let basePath = self.location.pathname.replace('/service-worker.js', '');
@@ -77,6 +77,9 @@ self.addEventListener('fetch', (evt) => {
   
   // Skip chrome-extension and other protocols
   if (!evt.request.url.startsWith('http')) return;
+
+  // API responses are live data: always go to the network, never serve or store them
+  if (new URL(evt.request.url).pathname.startsWith(basePath + '/api/')) return;
 
   evt.respondWith(
     caches.match(evt.request)
