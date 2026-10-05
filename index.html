@@ -5,13 +5,13 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Offline QR Ticket System</title>
 
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="/style.css" />
 
   <!-- PWA manifest -->
-  <link rel="manifest" href="manifest.json" />
+  <link rel="manifest" href="/manifest.json" />
   <meta name="theme-color" content="#007bff" />
-  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png" />
-  <link rel="apple-touch-icon" sizes="192x192" href="icon-192.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
+  <link rel="apple-touch-icon" sizes="192x192" href="/icon-192.png" />
 
   <!-- Register service worker -->
   <script>
@@ -227,7 +227,7 @@
   <header>
     <div class="header-bar">
       <div class="brand">
-        <img src="icon-192.png" alt="Offline QR Ticket System logo" class="logo" />
+        <img src="/icon-192.png" alt="Offline QR Ticket System logo" class="logo" />
         <div class="brand-text">
           <h1>Offline QR Ticket System</h1>
           <p class="subtitle">Generate &bull; Print &bull; Scan &bull; Track &mdash; fully offline PWA</p>
@@ -425,70 +425,9 @@
     <small>Tap the install button in your browser to add the app to your home screen. Works offline after the first load.</small>
   </footer>
 
-  <script>
-    function loadScriptLocalOrCdn(localPath, cdnUrl) {
-      return new Promise((resolve, reject) => {
-        fetch(localPath, { method: "HEAD" })
-          .then(resp => {
-            const script = document.createElement("script");
-            script.src = resp.ok ? localPath : cdnUrl;
-            script.onload = () => resolve();
-            script.onerror = () => reject(new Error("script load failed"));
-            document.head.appendChild(script);
-          })
-          .catch(() => {
-            const script = document.createElement("script");
-            script.src = cdnUrl;
-            script.onload = () => resolve();
-            script.onerror = () => reject(new Error("script load failed"));
-            document.head.appendChild(script);
-          });
-      });
-    }
-
-    function loadApp() {
-      const sync = document.createElement("script");
-      sync.src = "sync.js";
-      sync.onload = () => {
-        const app = document.createElement("script");
-        app.type = "module";
-        app.src = "main.js";
-        document.body.appendChild(app);
-      };
-      document.body.appendChild(sync);
-    }
-
-    Promise.all([
-      loadScriptLocalOrCdn("qrcode.min.js", "https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"),
-      loadScriptLocalOrCdn("html5-qrcode.min.js", "https://unpkg.com/html5-qrcode/minified/html5-qrcode.min.js")
-    ])
-      .then(() => {
-        console.log("Scripts loaded, checking for QRCode...");
-        let retryCount = 0;
-        const maxRetries = 40;
-
-        const waitForQRCode = () => {
-          retryCount += 1;
-          if (typeof QRCode !== "undefined") {
-            console.log("QRCode found! Loading app");
-            loadApp();
-            return;
-          }
-
-          if (retryCount < maxRetries) {
-            setTimeout(waitForQRCode, 50);
-          } else {
-            console.error("QRCode library not found after loading. Loading app anyway.");
-            loadApp();
-          }
-        };
-
-        setTimeout(waitForQRCode, 100);
-      })
-      .catch(err => {
-        console.error("Failed to load QR libraries", err);
-        loadApp();
-      });
-  </script>
+  <script src="/qrcode.min.js"></script>
+  <script src="/html5-qrcode.min.js"></script>
+  <script src="/sync.js"></script>
+  <script type="module" src="./main.js"></script>
 </body>
 </html>

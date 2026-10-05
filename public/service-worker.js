@@ -1,4 +1,4 @@
-const CACHE_NAME = 'offline-qr-v8'; // hotfix: escape untrusted text in DOM sinks (scan result, QR grid, print popup)
+const CACHE_NAME = 'offline-qr-v9'; // Vite build: hashed chunks cached at runtime; precache lists stable entries only
 
 // Get the base path from the service worker location
 let basePath = self.location.pathname.replace('/service-worker.js', '');
@@ -11,41 +11,20 @@ function normalizePath(path) {
   return (basePath + '/' + path).replace(/\/+/g, '/');
 }
 
+// Build output is hashed, so only stable entry pages and static files are precached.
+// Bundled chunks are cached on first fetch by the fetch handler below.
 const ASSETS = [
   normalizePath('index.html'),
+  normalizePath('fundraising.html'),
   normalizePath('style.css'),
-  normalizePath('main.js'),
-  normalizePath('modules/db.js'),
-  normalizePath('modules/dom.js'),
-  normalizePath('modules/ui.js'),
-  normalizePath('modules/ticketGrid.js'),
-  normalizePath('modules/utils.js'),
-  normalizePath('modules/settings.js'),
-  normalizePath('modules/actions.js'),
-  normalizePath('modules/scanner.js'),
-  normalizePath('modules/reset.js'),
-  normalizePath('modules/csvImport.js'),
-  normalizePath('modules/tabs.js'),
-  normalizePath('fundraising-main.js'),
-  normalizePath('modules/fundraising/constants.js'),
-  normalizePath('modules/fundraising/config.js'),
-  normalizePath('modules/fundraising/state.js'),
-  normalizePath('modules/fundraising/dom.js'),
-  normalizePath('modules/fundraising/utils.js'),
-  normalizePath('modules/fundraising/loader.js'),
-  normalizePath('modules/fundraising/ui.js'),
-  normalizePath('modules/fundraising/contributions.js'),
-  normalizePath('modules/fundraising/csv.js'),
-  normalizePath('modules/fundraising/testimony.js'),
-  normalizePath('modules/fundraising/overlay.js'),
-  normalizePath('modules/fundraising/bridge.js'),
-  normalizePath('modules/fundraising/autoSync.js'),
-  normalizePath('sync.js'),
+  normalizePath('fundraising.css'),
   normalizePath('manifest.json'),
   normalizePath('icon-192.png'),
   normalizePath('icon-512.png'),
   normalizePath('qrcode.min.js'),
-  normalizePath('html5-qrcode.min.js')
+  normalizePath('html5-qrcode.min.js'),
+  normalizePath('sync.js'),
+  normalizePath('data.json')
 ];
 
 // Install event - cache assets
@@ -98,7 +77,7 @@ self.addEventListener('fetch', (evt) => {
   
   // Skip chrome-extension and other protocols
   if (!evt.request.url.startsWith('http')) return;
-  
+
   evt.respondWith(
     caches.match(evt.request)
       .then(cached => {

@@ -10,7 +10,7 @@ import ticketsRouter from "./routes/tickets.js";
 import { pool } from "./db.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const FRONTEND_ROOT = path.resolve(__dirname, "../..");
+const FRONTEND_ROOT = path.resolve(__dirname, "../../dist");
 const PORT = process.env.PORT || 3000;
 const CORS_ORIGIN = process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(",") : false;
 

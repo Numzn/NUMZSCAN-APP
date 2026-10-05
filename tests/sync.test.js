@@ -20,7 +20,7 @@ let TicketSync;
 async function loadFreshSync() {
   vi.resetModules();
   delete globalThis.TicketSync;
-  await import("../sync.js");
+  await import("../public/sync.js");
   TicketSync = globalThis.TicketSync;
   TicketSync.init();
 }
@@ -222,7 +222,7 @@ describe("regressions: failed flushes and queue loading", () => {
     storage.set(QUEUE_KEY, JSON.stringify([{ id: "OLD", type: "createTicket", payload: { id: "OLD" }, retries: 0 }]));
     vi.resetModules();
     delete globalThis.TicketSync;
-    await import("../sync.js");
+    await import("../public/sync.js");
     const fresh = globalThis.TicketSync;
     expect(fresh.getPendingCount()).toBe(1);
     fresh.enqueue({ type: "createTicket", payload: { id: "NEW" } });
