@@ -21,6 +21,10 @@ npm-debug.log*
 # Environment files
 .env
 .env.local
+.env.dev
+
+# Local development state (logs, process ids)
+.dev/
 
 # Build files (if any)
 dist/

@@ -7,6 +7,9 @@ web/dist
 dist
 *.md
 .env
-.env.local
+.env.*
+.dev
+docker-compose.dev.yml
+scripts/dev
 tests
 vitest.config.js

@@ -1,0 +1,23 @@
+# Local development database only. Separate project name, no production network, bound to localhost.
+# Use scripts/dev/up.sh and scripts/dev/down.sh rather than running this file by hand.
+name: numzscan-dev
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_PASSWORD: ${DEV_POSTGRES_PASSWORD:?set in .env.dev}
+      POSTGRES_DB: numzscan_dev
+    ports:
+      - "127.0.0.1:54329:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d numzscan_dev"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+volumes:
+  pgdata:

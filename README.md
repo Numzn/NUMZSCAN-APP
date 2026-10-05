@@ -28,6 +28,21 @@ Copy `.env.example` to `.env` and fill in the values. Keep `.env` out of git.
 - `EVENTPASS_TOKEN_KEY` must be set for `/api/v1` and sign-in to work. Without it the React app loads but cannot sign in. Generate it with `node -e "console.log(require('crypto').randomBytes(32).toString('base64url'))"`.
 - `NUMZSCAN_DB_*` point at the shared `infra-postgres` database.
 
+## Local development
+
+Work on the app without deploying. Your edits show in the browser straight away.
+
+```bash
+npm install && (cd web && npm install)   # first time only
+npm run dev:up                           # local Postgres, the API, and the web app
+```
+
+- Open http://127.0.0.1:5294 and sign in as `admin@dev.local`, `manager@dev.local`, or `staff@dev.local`. The password is `grep DEV_PASSWORD .env.dev`.
+- Changes under `web/src` appear in the browser immediately. Changes under `api/src` restart the API.
+- `npm run dev:down` stops the API and the web app, and keeps the dev database. `npm run dev:wipe` also deletes the dev database.
+- The dev stack never reads the production `.env` and never connects to the production database. Its secrets live in `.env.dev`, which is git-ignored and mode 600.
+- Ports: web 5294, API 3301, Postgres 54329, all on 127.0.0.1.
+
 ## Running
 
 ```bash

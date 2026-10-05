@@ -12,6 +12,9 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "dev": "vite",
+    "dev:up": "bash scripts/dev/up.sh",
+    "dev:down": "bash scripts/dev/down.sh",
+    "dev:wipe": "bash scripts/dev/down.sh --wipe",
     "build": "vite build",
     "preview": "vite preview"
   }
