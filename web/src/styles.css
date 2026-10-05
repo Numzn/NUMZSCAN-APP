@@ -206,3 +206,39 @@ input:focus, select:focus { border-color: var(--brand); box-shadow: 0 0 0 3px rg
   body, main { background: #fff; box-shadow: none; margin: 0; max-width: none; padding: 0; border-radius: 0; }
   .pass { border: 2px solid #000; box-shadow: none; break-inside: avoid; }
 }
+
+/* Administration: sidebar on desktop, a row of tabs on a phone */
+.admin { display: grid; grid-template-columns: 11rem minmax(0, 1fr); gap: 1.5rem; align-items: start; }
+.admin-nav { display: grid; gap: 0.2rem; align-content: start; }
+.admin-nav a { color: var(--muted); padding: 0.5rem 0.7rem; border-radius: 8px; font-weight: 600; }
+.admin-nav a:hover { background: var(--card); text-decoration: none; color: var(--ink); }
+.admin-nav a.active { background: var(--brand-soft); color: var(--brand-strong); }
+.admin-body { min-width: 0; }
+
+.metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); gap: 0.8rem; margin: 1rem 0; }
+.metric { display: grid; gap: 0.25rem; padding: 0.9rem 1rem; background: var(--card); border: 1px solid var(--line); border-radius: 12px; }
+.metric-label { color: var(--muted); font-size: 0.85rem; }
+.metric-value { font-size: 1.6rem; font-weight: 700; color: var(--brand-strong); }
+
+.badges { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.checkbox { display: flex; align-items: center; gap: 0.5rem; font-weight: 600; }
+.checkbox input { width: 1.1rem; height: 1.1rem; min-height: 0; }
+.form-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 0.6rem; margin-top: 0.4rem; }
+.block { display: block; }
+.code { margin-left: 0.5rem; font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace; font-size: 0.8rem; }
+.row-actions-cell { text-align: right; white-space: nowrap; }
+.card > h2:first-child { margin-top: 0; }
+
+@media (max-width: 640px) {
+  .admin { grid-template-columns: 1fr; gap: 0.75rem; }
+  .admin-nav { display: flex; overflow-x: auto; gap: 0.25rem; padding-bottom: 0.25rem; }
+  .admin-nav a { white-space: nowrap; }
+  .metrics { grid-template-columns: 1fr 1fr; }
+  .row-actions-cell { text-align: left; white-space: normal; }
+  .form-actions { justify-content: stretch; }
+  .form-actions button { flex: 1 1 auto; }
+}
+
+/* Form controls shrink to their container. A long option (such as an email) must not widen the page. */
+label { min-width: 0; }
+input, select, textarea { max-width: 100%; min-width: 0; }

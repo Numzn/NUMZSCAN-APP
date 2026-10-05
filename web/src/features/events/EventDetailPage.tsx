@@ -69,6 +69,10 @@ export function EventDetailPage() {
           <strong>Groups</strong>
           <span className="meta">Churches, dormitories and teams</span>
         </Link>
+        <Link to={`/events/${event.id}/access`} className="tile">
+          <strong>Access</strong>
+          <span className="meta">Who works on this event</span>
+        </Link>
       </nav>
     </section>
   );

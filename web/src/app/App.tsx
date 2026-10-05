@@ -9,6 +9,15 @@ import { GroupsPage } from "../features/groups/GroupsPage";
 import { ParticipantDetailPage } from "../features/participants/ParticipantDetailPage";
 import { ParticipantsPage } from "../features/participants/ParticipantsPage";
 import { RegisterParticipantPage } from "../features/participants/RegisterParticipantPage";
+import { AccessPage } from "../features/access/AccessPage";
+import { AdminLayout } from "../features/admin/AdminLayout";
+import { AdminRoute } from "../features/admin/AdminRoute";
+import { AuditPage } from "../features/admin/AuditPage";
+import { EventSettingsPage } from "../features/admin/EventSettingsPage";
+import { EventsAdminPage } from "../features/admin/EventsAdminPage";
+import { OverviewPage } from "../features/admin/OverviewPage";
+import { UserDetailPage } from "../features/admin/UserDetailPage";
+import { UsersPage } from "../features/admin/UsersPage";
 import { AuthProvider } from "./AuthContext";
 
 export function App() {
@@ -31,7 +40,16 @@ export function App() {
             <Route path="events/:eventId/groups" element={<GroupsPage />} />
             <Route path="events/:eventId/participants" element={<ParticipantsPage />} />
             <Route path="events/:eventId/participants/new" element={<RegisterParticipantPage />} />
+            <Route path="events/:eventId/access" element={<AccessPage />} />
             <Route path="event-participants/:participantId" element={<ParticipantDetailPage />} />
+            <Route path="admin" element={<AdminRoute><AdminLayout /></AdminRoute>}>
+              <Route index element={<OverviewPage />} />
+              <Route path="users" element={<UsersPage />} />
+              <Route path="users/:userId" element={<UserDetailPage />} />
+              <Route path="events" element={<EventsAdminPage />} />
+              <Route path="events/:eventId" element={<EventSettingsPage />} />
+              <Route path="audit" element={<AuditPage />} />
+            </Route>
           </Route>
           <Route path="*" element={<p className="status">Page not found.</p>} />
         </Routes>

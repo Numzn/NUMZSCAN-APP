@@ -26,6 +26,7 @@ export function Layout() {
         <nav className="topnav" aria-label="Main">
           <NavLink to="/" end>Events</NavLink>
           {state.status === "signed-in" && state.user.isAdmin && <NavLink to="/events/new">New event</NavLink>}
+          {state.status === "signed-in" && state.user.isAdmin && <NavLink to="/admin">Admin</NavLink>}
         </nav>
         <div className="account">
           {displayName && (

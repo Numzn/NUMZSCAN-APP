@@ -3,6 +3,7 @@ import { z } from "zod";
 import { audit } from "../audit.js";
 import { READ_ROLES, MANAGE_ROLES, authorizeEvent, requireUser } from "../access.js";
 import { parse } from "../validation.js";
+import { withTransaction } from "../tx.js";
 import { ApiError, conflict, notFound, forbidden } from "../security.js";
 
 const dateString = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "expected YYYY-MM-DD");
@@ -92,31 +93,48 @@ export function eventsRouter({ pool }) {
   router.patch("/events/:eventId", requireUser, async (req, res, next) => {
     try {
       const user = req.principal.user;
-      await authorizeEvent(pool, user, req.params.eventId, MANAGE_ROLES);
+      const eventId = z.string().uuid().safeParse(req.params.eventId);
+      if (!eventId.success) throw notFound("Event not found");
+      await authorizeEvent(pool, user, eventId.data, MANAGE_ROLES);
       const body = parse(updateSchema, req.body);
 
-      const current = await pool.query(
-        `select to_char(starts_on, 'YYYY-MM-DD') as "startsOn", to_char(ends_on, 'YYYY-MM-DD') as "endsOn"
-           from events where id = $1`,
-        [req.params.eventId]
-      );
-      const startsOn = body.startsOn ?? current.rows[0]?.startsOn;
-      const endsOn = body.endsOn ?? current.rows[0]?.endsOn;
-      if (endsOn < startsOn) throw new ApiError(400, "INVALID_INPUT", "Request is invalid", [{ path: "endsOn", message: "endsOn must not be before startsOn" }]);
+      // The change and its audit entry commit together. Both administrators and event managers are audited.
+      const event = await withTransaction(pool, async (client) => {
+        const { rows: before } = await client.query(`select ${EVENT_SELECT} from events where id = $1 for update`, [eventId.data]);
+        const current = before[0];
+        if (!current) throw notFound("Event not found");
 
-      const { rows } = await pool.query(
-        `update events set
-           name = coalesce($2, name),
-           status = coalesce($3, status),
-           timezone = coalesce($4, timezone),
-           starts_on = $5,
-           ends_on = $6
-         where id = $1
-         returning ${EVENT_SELECT}`,
-        [req.params.eventId, body.name ?? null, body.status ?? null, body.timezone ?? null, startsOn, endsOn]
-      );
-      await audit(pool, { actor: user.id, action: "update", entity: "event", entityId: req.params.eventId, eventId: req.params.eventId, details: { fields: Object.keys(body) } });
-      res.json({ event: rows[0] });
+        const startsOn = body.startsOn ?? current.startsOn;
+        const endsOn = body.endsOn ?? current.endsOn;
+        if (endsOn < startsOn) throw new ApiError(400, "INVALID_INPUT", "Request is invalid", [{ path: "endsOn", message: "endsOn must not be before startsOn" }]);
+
+        const { rows } = await client.query(
+          `update events set
+             name = coalesce($2, name),
+             status = coalesce($3, status),
+             timezone = coalesce($4, timezone),
+             starts_on = $5,
+             ends_on = $6
+           where id = $1
+           returning ${EVENT_SELECT}`,
+          [eventId.data, body.name ?? null, body.status ?? null, body.timezone ?? null, startsOn, endsOn]
+        );
+        const updated = rows[0];
+        const changes = {};
+        for (const field of ["name", "status", "timezone", "startsOn", "endsOn"]) {
+          if (current[field] !== updated[field]) changes[field] = { from: current[field], to: updated[field] };
+        }
+        await audit(client, {
+          actor: user.id,
+          action: "event.update",
+          entity: "event",
+          entityId: eventId.data,
+          eventId: eventId.data,
+          details: { changes },
+        });
+        return updated;
+      });
+      res.json({ event });
     } catch (err) {
       next(err);
     }

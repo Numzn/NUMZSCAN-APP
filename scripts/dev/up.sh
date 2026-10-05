@@ -57,8 +57,20 @@ for _ in $(seq 1 60); do
 done
 [ "$(docker inspect --format '{{.State.Health.Status}}' "$PG_CONTAINER")" = healthy ] || { echo "dev Postgres did not become healthy"; exit 1; }
 
-# Schema and demo data (both safe to repeat)
-(cd api && node scripts/migrate.js)
+# A new database starts a temporary server before the real one. Health alone can pass during that
+# window, so wait for two successful queries a few seconds apart, then retry the schema step.
+db_ready() { docker exec "$PG_CONTAINER" psql -U postgres -d numzscan_dev -tAc "select 1" >/dev/null 2>&1; }
+for _ in $(seq 1 60); do db_ready && break; sleep 1; done
+sleep 3
+for _ in $(seq 1 60); do db_ready && break; sleep 1; done
+
+for attempt in 1 2 3 4 5; do
+  if (cd api && node scripts/migrate.js); then break; fi
+  [ "$attempt" = 5 ] && { echo "could not apply the dev schema"; exit 1; }
+  sleep 3
+done
+
+# Schema and demo data (safe to repeat)
 node scripts/dev/seed.mjs
 
 # Starts a server unless its pid file shows it is already running.

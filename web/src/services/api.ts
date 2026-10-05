@@ -1,4 +1,21 @@
-import type { CampEvent, Credential, Group, GroupKind, IssuedCredential, Membership, Participant, ParticipantRole, ParticipantStatus, PersonMatch, User } from "./types";
+import type {
+  AccessRow,
+  AdminUser,
+  AdminUserDetail,
+  AuditEntry,
+  CampEvent,
+  Credential,
+  Group,
+  GroupKind,
+  IssuedCredential,
+  Membership,
+  Overview,
+  Participant,
+  ParticipantRole,
+  ParticipantStatus,
+  PersonMatch,
+  User,
+} from "./types";
 
 export class ApiError extends Error {
   readonly status: number;
@@ -14,7 +31,7 @@ export class ApiError extends Error {
   }
 }
 
-type Method = "GET" | "POST" | "PATCH";
+type Method = "GET" | "POST" | "PATCH" | "DELETE";
 
 interface ErrorEnvelope {
   error?: { code?: string; message?: string; details?: unknown };
@@ -62,7 +79,28 @@ export interface NewParticipant {
   role?: ParticipantRole;
 }
 
+export interface UserListQuery {
+  q?: string;
+  status?: "active" | "deactivated" | "all";
+  limit?: number;
+  offset?: number;
+}
+
+export interface AuditQuery {
+  limit?: number;
+  before?: string;
+  action?: string;
+  eventId?: string;
+}
+
 const enc = encodeURIComponent;
+
+function query(params: Record<string, string | number | undefined>): string {
+  const parts = Object.entries(params)
+    .filter(([, value]) => value !== undefined && value !== "")
+    .map(([key, value]) => `${enc(key)}=${enc(String(value))}`);
+  return parts.length ? `?${parts.join("&")}` : "";
+}
 
 export const api = {
   login: (email: string, password: string) =>
@@ -73,6 +111,8 @@ export const api = {
   listEvents: () => request<{ events: CampEvent[] }>("GET", "/events"),
   getEvent: (eventId: string) => request<{ event: CampEvent }>("GET", `/events/${enc(eventId)}`),
   createEvent: (body: NewEvent) => request<{ event: CampEvent }>("POST", "/events", body),
+  updateEvent: (eventId: string, body: Partial<Pick<CampEvent, "name" | "status" | "timezone" | "startsOn" | "endsOn">>) =>
+    request<{ event: CampEvent }>("PATCH", `/events/${enc(eventId)}`, body),
 
   listGroups: (eventId: string) => request<{ groups: Group[] }>("GET", `/events/${enc(eventId)}/groups`),
   createGroup: (eventId: string, body: { name: string; kind: GroupKind }) =>
@@ -97,4 +137,30 @@ export const api = {
     request<IssuedCredential>("POST", `/credentials/${enc(credentialId)}/replace`, {}),
   revokeCredential: (credentialId: string) =>
     request<{ credential: Credential }>("POST", `/credentials/${enc(credentialId)}/revoke`, {}),
+
+  // Administrator area
+  adminOverview: () => request<{ overview: Overview }>("GET", "/admin/overview"),
+  adminListUsers: (params: UserListQuery = {}) =>
+    request<{ users: AdminUser[]; total: number }>("GET", `/admin/users${query({ ...params })}`),
+  adminCreateUser: (body: { email: string; displayName: string; password: string; isAdmin: boolean }) =>
+    request<{ user: AdminUser }>("POST", "/admin/users", body),
+  adminGetUser: (userId: string) => request<{ user: AdminUserDetail }>("GET", `/admin/users/${enc(userId)}`),
+  adminUpdateUser: (userId: string, body: { displayName?: string; isAdmin?: boolean; isActive?: boolean }) =>
+    request<{ user: AdminUser }>("PATCH", `/admin/users/${enc(userId)}`, body),
+  adminResetPassword: (userId: string, password: string) =>
+    request<{ ok: boolean; sessionsEnded: number }>("POST", `/admin/users/${enc(userId)}/password`, { password }),
+  adminRevokeSessions: (userId: string) =>
+    request<{ ok: boolean; sessionsEnded: number }>("POST", `/admin/users/${enc(userId)}/sessions/revoke`, {}),
+  adminAudit: (params: AuditQuery = {}) =>
+    request<{ entries: AuditEntry[]; nextBefore: string | null }>("GET", `/admin/audit${query({ ...params })}`),
+
+  // Event access
+  listMemberships: (eventId: string) =>
+    request<{ memberships: AccessRow[] }>("GET", `/events/${enc(eventId)}/memberships`),
+  addMembership: (eventId: string, body: { userId: string; role: "event_manager" | "staff" }) =>
+    request<{ membership: AccessRow }>("POST", `/events/${enc(eventId)}/memberships`, body),
+  changeMembership: (eventId: string, userId: string, role: "event_manager" | "staff") =>
+    request<{ membership: AccessRow }>("PATCH", `/events/${enc(eventId)}/memberships/${enc(userId)}`, { role }),
+  removeMembership: (eventId: string, userId: string) =>
+    request<void>("DELETE", `/events/${enc(eventId)}/memberships/${enc(userId)}`),
 };

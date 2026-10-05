@@ -2,7 +2,9 @@ import express, { Router } from "express";
 import rateLimit from "express-rate-limit";
 import { loadPrincipal } from "./access.js";
 import { authRouter } from "./auth.js";
+import { adminRouter } from "./routes/admin.js";
 import { checkpointsRouter } from "./routes/checkpoints.js";
+import { membershipsRouter } from "./routes/memberships.js";
 import { credentialsRouter } from "./routes/credentials.js";
 import { devicesRouter } from "./routes/devices.js";
 import { eventsRouter } from "./routes/events.js";
@@ -49,7 +51,9 @@ export function createV1Router({ pool, config }) {
 
   router.use(loadPrincipal({ pool, config }));
   router.use("/auth", authRouter({ pool, config }));
+  router.use(adminRouter({ pool }));
   router.use(eventsRouter({ pool }));
+  router.use(membershipsRouter({ pool }));
   router.use(participantsRouter({ pool }));
   router.use(credentialsRouter({ pool, config }));
   router.use(checkpointsRouter({ pool }));
