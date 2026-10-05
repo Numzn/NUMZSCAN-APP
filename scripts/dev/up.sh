@@ -98,7 +98,7 @@ EventPass dev is running.
   App:      http://127.0.0.1:$WEB_PORT
   API:      http://127.0.0.1:$API_PORT
   Accounts: admin@dev.local, manager@dev.local, staff@dev.local
-  Password: grep DEV_PASSWORD $ENV_FILE
+  Password: grep DEV_PASSWORD $ENV_FILE | cut -d= -f2-
   Logs:     $STATE_DIR/api.log, $STATE_DIR/web.log
   Stop:     npm run dev:down
 EOF

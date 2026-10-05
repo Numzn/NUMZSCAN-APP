@@ -37,7 +37,7 @@ npm install && (cd web && npm install)   # first time only
 npm run dev:up                           # local Postgres, the API, and the web app
 ```
 
-- Open http://127.0.0.1:5294 and sign in as `admin@dev.local`, `manager@dev.local`, or `staff@dev.local`. The password is `grep DEV_PASSWORD .env.dev`.
+- Open http://127.0.0.1:5294 and sign in as `admin@dev.local`, `manager@dev.local`, or `staff@dev.local`. The password is `grep DEV_PASSWORD .env.dev | cut -d= -f2-`.
 - Changes under `web/src` appear in the browser immediately. Changes under `api/src` restart the API.
 - `npm run dev:down` stops the API and the web app, and keeps the dev database. `npm run dev:wipe` also deletes the dev database.
 - The dev stack never reads the production `.env` and never connects to the production database. Its secrets live in `.env.dev`, which is git-ignored and mode 600.
