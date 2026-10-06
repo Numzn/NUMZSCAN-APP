@@ -9,16 +9,15 @@ services:
       CORS_ORIGIN: ${NUMZSCAN_CORS_ORIGIN:-}
       # EventPass API v1 (and the React app's sign-in) is mounted only when this is set.
       EVENTPASS_TOKEN_KEY: ${EVENTPASS_TOKEN_KEY:-}
-    ports:
-      # Loopback — direct host-level access.
-      - "127.0.0.1:${NUMZSCAN_HTTP_PORT:-3210}:3000"
-      # Platform Gateway reachability — numzlab-platform-gateway reaches this
-      # container via host.docker.internal, which resolves to the Docker bridge
-      # gateway, not loopback. NUMZSCAN_GATEWAY_BIND_IP is a discovered runtime
-      # value (docker network inspect bridge), not a hardcoded literal.
-      - "${NUMZSCAN_GATEWAY_BIND_IP}:${NUMZSCAN_HTTP_PORT:-3210}:3000"
+      # Public address for registration links and QR codes. Set in .env; blank means no link is offered.
+      EVENTPASS_PUBLIC_URL: ${EVENTPASS_PUBLIC_URL:-}
     networks:
-      - infra
+      infra: {}
+      # Private network shared with the NumzLab gateway. The gateway reaches this service as "eventpass".
+      eventpass-private:
+        aliases:
+          - eventpass
+        ipv4_address: 172.16.40.3
     healthcheck:
       test:
         [
@@ -32,3 +31,12 @@ services:
 networks:
   infra:
     external: true
+  # Dedicated gateway-to-EventPass network. Fixed name, subnet and bridge name: firewall identity must not depend on Docker-generated names.
+  eventpass-private:
+    name: eventpass-private
+    driver_opts:
+      com.docker.network.bridge.name: br-eventpriv
+    ipam:
+      config:
+        - subnet: 172.16.40.0/24
+          gateway: 172.16.40.1
