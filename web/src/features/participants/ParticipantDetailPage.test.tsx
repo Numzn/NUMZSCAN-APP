@@ -112,10 +112,12 @@ describe("ParticipantDetailPage", () => {
     expect(screen.getByRole("button", { name: "Issue credential" })).toBeInTheDocument();
   });
 
-  it("lets staff issue and replace, but not change the group or revoke", async () => {
+  // Staff see the pass but cannot replace, revoke or regroup: those are manager decisions.
+  it("lets staff see the pass, but not replace, revoke or change the group", async () => {
     loadWith([credential({ id: "c-1" })]);
     renderDetail(STAFF, [{ eventId: "e-1", role: "staff" }]);
-    expect(await screen.findByRole("button", { name: "Replace" })).toBeInTheDocument();
+    await screen.findByText("Active");
+    expect(screen.queryByRole("button", { name: "Replace" })).toBeNull();
     expect(screen.queryByRole("button", { name: "Revoke" })).toBeNull();
     expect(screen.queryByRole("button", { name: "Save group" })).toBeNull();
   });

@@ -161,6 +161,7 @@ describe.skipIf(!url)("EventPass v2 schema", () => {
         "0001_eventpass_v2.sql",
         "0002_identity_and_access.sql",
         "0003_registration.sql",
+        "0004_staff_scanning.sql",
       ]);
     });
 

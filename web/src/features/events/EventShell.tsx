@@ -39,6 +39,12 @@ export function EventShell() {
         ? [{ label: "Registration", to: `${base}/registration` }, { label: "Form" }]
       : section.startsWith("/registration")
         ? [{ label: "Registration" }]
+      : section.startsWith("/checkpoints")
+        ? [{ label: "Checkpoints" }]
+      : section.startsWith("/scanner")
+        ? [{ label: "Scanner" }]
+      : section.startsWith("/attendance")
+        ? [{ label: "Attendance" }]
       : section.startsWith("/groups")
         ? [{ label: "Groups" }]
         : section.startsWith("/access")

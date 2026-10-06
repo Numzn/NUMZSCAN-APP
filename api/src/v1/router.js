@@ -9,6 +9,7 @@ import { credentialsRouter } from "./routes/credentials.js";
 import { devicesRouter } from "./routes/devices.js";
 import { eventsRouter } from "./routes/events.js";
 import { interactionsRouter } from "./routes/interactions.js";
+import { operationsRouter } from "./routes/operations.js";
 import { participantsRouter } from "./routes/participants.js";
 import { publicRegistrationRouter, registrationRouter } from "./routes/registration.js";
 import { v1ErrorHandler } from "./errors.js";
@@ -62,6 +63,7 @@ export function createV1Router({ pool, config }) {
   router.use(checkpointsRouter({ pool }));
   router.use(devicesRouter({ pool, config }));
   router.use(interactionsRouter({ pool, config }));
+  router.use(operationsRouter({ pool, config }));
 
   router.use((req, res, next) => next(new ApiError(404, "NOT_FOUND", "Route not found")));
   router.use(v1ErrorHandler);

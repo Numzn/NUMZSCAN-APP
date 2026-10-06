@@ -194,3 +194,50 @@ export interface RegistrationSubmissionView {
   identityMatch: "new" | "reused" | "ambiguous";
   answers: RegistrationAnswer[];
 }
+
+export type CheckpointKind = "gate" | "check_in" | "service" | "activity" | "meal" | "transport" | "departure" | "generic";
+export type CheckpointRule = "once_per_event" | "once_per_occurrence" | "unlimited";
+
+export interface Checkpoint {
+  id: string;
+  eventId: string;
+  name: string;
+  kind: CheckpointKind;
+  ruleType: CheckpointRule;
+  active: boolean;
+  // True once a scan has been recorded. Kind and rule are fixed from then on.
+  hasScans: boolean;
+}
+
+export interface Occurrence {
+  id: string;
+  checkpointId: string;
+  label: string;
+  startsAt: string;
+  endsAt: string;
+  serviceDate: string;
+}
+
+export type ScanOutcome = "accepted" | "duplicate" | "rejected" | "revoked" | "outside_window";
+
+// What the operator sees after a scan: the operation performed, and the participant it concerns.
+export interface ScanParticipant {
+  id: string;
+  fullName: string;
+  groupName: string | null;
+  status: ParticipantStatus;
+}
+
+export interface ScanResult {
+  replayed: boolean;
+  operation: "check_in" | "check_out" | "meal" | "scan";
+  participant: ScanParticipant;
+  interaction: { id: string; outcome: ScanOutcome; reason: string | null };
+}
+
+export interface AttendanceSummary {
+  counts: Record<ParticipantStatus, number>;
+  byGroup: { groupName: string; total: number; checkedIn: number; departed: number }[];
+  byCheckpoint: { checkpointId: string; name: string; kind: CheckpointKind; accepted: number; duplicate: number; refused: number }[];
+  meals: { name: string; served: number }[];
+}

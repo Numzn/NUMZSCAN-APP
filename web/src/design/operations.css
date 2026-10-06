@@ -1,0 +1,17 @@
+/* Operations: checkpoints, the scanner and attendance. Built from the existing tokens and components. */
+.checkpoint-list { display: grid; gap: var(--space-3); list-style: none; margin: 0; padding: 0; }
+.checkpoint-row { display: grid; gap: var(--space-3); }
+.checkpoint-row details summary { cursor: pointer; font-weight: var(--weight-semibold); color: var(--color-primary); }
+.service-times { display: grid; gap: var(--space-3); padding-top: var(--space-3); border-top: 1px solid var(--color-border); }
+.service-times h3 { margin: 0; font-size: var(--text-label); }
+.scanner-camera { display: grid; gap: var(--space-3); justify-items: start; }
+.scanner-video { width: 100%; max-width: 420px; border-radius: var(--radius-card); background: #000; }
+.scanner-video.is-hidden { display: none; }
+.scan-result { font-size: var(--text-section); font-weight: var(--weight-semibold); padding: var(--space-4); border-radius: var(--radius-card); }
+.scan-success { background: var(--color-success-soft); color: var(--color-success); }
+.scan-info { background: var(--color-info-soft); color: var(--color-info); }
+.scanner-camera .meta, .scan-result { overflow-wrap: anywhere; }
+@media (max-width: 767px) {
+  .scanner-video { max-width: 100%; }
+  .scan-result { font-size: var(--text-card-title); }
+}

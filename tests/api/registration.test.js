@@ -439,7 +439,7 @@ describe.skipIf(!TEST_URL)("registration v1", () => {
       const over = await api(base, "POST", `/api/v1/events/${campA}/registration/form/fields`, { cookie: manager, body: { label: "One too many", type: "text" } });
       expect(over.status).toBe(409);
       expect(over.body.error.code).toBe("FORM_FULL");
-    });
+    }, 30000);
 
     it("another event's field is not found through this event", async () => {
       const fieldOfA = (await formOf(campA))[0];

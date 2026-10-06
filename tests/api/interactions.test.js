@@ -25,7 +25,7 @@ describe.skipIf(!TEST_URL)("interactions", () => {
   }
 
   async function issue(participantId, body = {}) {
-    return api(base, "POST", `/api/v1/event-participants/${participantId}/credentials`, { cookie: staffCookie, body });
+    return api(base, "POST", `/api/v1/event-participants/${participantId}/credentials`, { cookie: managerCookie, body });
   }
 
   async function freshOccurrence(checkpointId, eventId, startsAt = START, endsAt = END) {

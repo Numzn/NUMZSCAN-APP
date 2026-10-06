@@ -16,7 +16,10 @@ export type Capability =
   | "participant.register"
   | "credential.issue"
   | "event.registration.view"
-  | "event.registration.manage";
+  | "event.registration.manage"
+  | "checkpoint.manage"
+  | "operations.scan"
+  | "attendance.view";
 
 export interface Viewer {
   user: User;
@@ -46,8 +49,15 @@ export function can(viewer: Viewer | null, capability: Capability, eventId?: str
       return viewer.user.isAdmin;
     case "event.view":
       return role !== null;
+    // Staff operate the camp; they do not issue passes, which is a manager decision.
     case "credential.issue":
+      return role !== null && CAN_MANAGE_EVENT.has(role);
+    // Staff and managers scan and see attendance. Only managers change checkpoints.
+    case "operations.scan":
+    case "attendance.view":
       return role !== null;
+    case "checkpoint.manage":
+      return role !== null && CAN_MANAGE_EVENT.has(role);
     case "event.manage":
     case "event.access.view":
     case "participant.register":

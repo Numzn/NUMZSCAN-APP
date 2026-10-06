@@ -1,5 +1,11 @@
 import type {
   AccessRow,
+  AttendanceSummary,
+  Checkpoint,
+  CheckpointKind,
+  CheckpointRule,
+  Occurrence,
+  ScanResult,
   AdminUser,
   Confirmation,
   FormField,
@@ -169,6 +175,18 @@ export const api = {
   publicRegistration: (slug: string) => request<PublicRegistration>("GET", `/public/registration/${enc(slug)}`),
   submitPublicRegistration: (slug: string, body: { submissionId: string; answers: Record<string, string | boolean> }) =>
     request<{ confirmation: Confirmation }>("POST", `/public/registration/${enc(slug)}`, body),
+
+  checkpoints: (eventId: string) => request<{ checkpoints: Checkpoint[] }>("GET", `/events/${enc(eventId)}/checkpoints`),
+  createCheckpoint: (eventId: string, body: { name: string; kind: CheckpointKind; ruleType: CheckpointRule; active?: boolean }) =>
+    request<{ checkpoint: Checkpoint }>("POST", `/events/${enc(eventId)}/checkpoints`, body),
+  updateCheckpoint: (checkpointId: string, body: { name?: string; kind?: CheckpointKind; ruleType?: CheckpointRule; active?: boolean }) =>
+    request<{ checkpoint: Checkpoint }>("PATCH", `/checkpoints/${enc(checkpointId)}`, body),
+  occurrences: (checkpointId: string) => request<{ occurrences: Occurrence[] }>("GET", `/checkpoints/${enc(checkpointId)}/occurrences`),
+  createOccurrence: (checkpointId: string, body: { label: string; startsAt: string; endsAt: string; serviceDate: string }) =>
+    request<{ occurrence: Occurrence }>("POST", `/checkpoints/${enc(checkpointId)}/occurrences`, body),
+  scan: (eventId: string, body: { id: string; credential: string; checkpointId: string; occurrenceId: string; scannedAt: string }) =>
+    request<ScanResult>("POST", `/events/${enc(eventId)}/scans`, body),
+  attendance: (eventId: string) => request<AttendanceSummary>("GET", `/events/${enc(eventId)}/attendance`),
 
   adminOverview: () => request<{ overview: Overview }>("GET", "/admin/overview"),
   adminListUsers: (params: UserListQuery = {}) =>

@@ -2,7 +2,7 @@ import { Router } from "express";
 import crypto from "node:crypto";
 import { z } from "zod";
 import { audit } from "../audit.js";
-import { ISSUE_ROLES, MANAGE_ROLES, READ_ROLES, authorizeEvent, eventIdOf, requireUser } from "../access.js";
+import { MANAGE_ROLES, READ_ROLES, authorizeEvent, eventIdOf, requireUser } from "../access.js";
 import { parse } from "../validation.js";
 import { conflict, hmacHex, notFound, randomToken } from "../security.js";
 
@@ -46,7 +46,7 @@ export function credentialsRouter({ pool, config }) {
       const user = req.principal.user;
       const participantId = req.params.participantId;
       const eventId = await eventIdOf(pool, "event_participants", participantId);
-      await authorizeEvent(pool, user, eventId, ISSUE_ROLES);
+      await authorizeEvent(pool, user, eventId, MANAGE_ROLES);
       const body = parse(issueSchema, req.body);
 
       const participant = await pool.query("select status from event_participants where id = $1", [participantId]);
@@ -82,7 +82,7 @@ export function credentialsRouter({ pool, config }) {
       const user = req.principal.user;
       const oldId = req.params.credentialId;
       const eventId = await eventIdOf(pool, "credentials", oldId);
-      await authorizeEvent(pool, user, eventId, ISSUE_ROLES);
+      await authorizeEvent(pool, user, eventId, MANAGE_ROLES);
       parse(z.object({}).passthrough(), req.body);
 
       await client.query("begin");

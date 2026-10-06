@@ -6,7 +6,9 @@ const SCANNER_SCHEME = "Scanner ";
 
 export const READ_ROLES = ["event_manager", "staff"];
 export const MANAGE_ROLES = ["event_manager"];
-export const ISSUE_ROLES = ["event_manager", "staff"];
+// Staff operate the camp: they scan credentials and record check-in, check-out and meals. They do not manage
+// participants, credentials, checkpoints, devices, membership or registration.
+export const OPERATE_ROLES = ["event_manager", "staff"];
 
 export function parseCookies(header = "") {
   const cookies = {};

@@ -102,6 +102,15 @@ function eventSections(viewer: Viewer, eventId: string): NavSection[] {
   if (can(viewer, "event.registration.view", eventId)) {
     operations.push({ to: `${base}/registration`, label: "Registration", match: (p) => p.startsWith(`${base}/registration`) });
   }
+  if (can(viewer, "checkpoint.manage", eventId)) {
+    operations.push({ to: `${base}/checkpoints`, label: "Checkpoints", match: (p) => p.startsWith(`${base}/checkpoints`) });
+  }
+  if (can(viewer, "operations.scan", eventId)) {
+    operations.push({ to: `${base}/scanner`, label: "Scanner", match: (p) => p.startsWith(`${base}/scanner`) });
+  }
+  if (can(viewer, "attendance.view", eventId)) {
+    operations.push({ to: `${base}/attendance`, label: "Attendance", match: (p) => p.startsWith(`${base}/attendance`) });
+  }
   operations.push({ to: `${base}/groups`, label: "Groups", match: (p) => p.startsWith(`${base}/groups`) });
   const setup: NavItem[] = [];
   if (can(viewer, "event.access.view", eventId)) {

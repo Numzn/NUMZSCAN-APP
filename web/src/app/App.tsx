@@ -12,6 +12,9 @@ import { ParticipantDetailPage } from "../features/participants/ParticipantDetai
 import { ParticipantsPage } from "../features/participants/ParticipantsPage";
 import { RegisterParticipantPage } from "../features/participants/RegisterParticipantPage";
 import { AccessPage } from "../features/access/AccessPage";
+import { AttendancePage } from "../features/operations/AttendancePage";
+import { CheckpointsPage } from "../features/operations/CheckpointsPage";
+import { ScannerPage } from "../features/operations/ScannerPage";
 import { FormBuilderPage } from "../features/registration/FormBuilderPage";
 import { PublicRegistrationPage } from "../features/registration/PublicRegistrationPage";
 import { RegistrationPage } from "../features/registration/RegistrationPage";
@@ -50,6 +53,9 @@ export function App() {
               <Route path="participants/new" element={<RegisterParticipantPage />} />
               <Route path="registration" element={<RegistrationPage />} />
               <Route path="registration/form" element={<FormBuilderPage />} />
+              <Route path="checkpoints" element={<CheckpointsPage />} />
+              <Route path="scanner" element={<ScannerPage />} />
+              <Route path="attendance" element={<AttendancePage />} />
               <Route path="groups" element={<GroupsPage />} />
               <Route path="access" element={<AccessPage />} />
             </Route>

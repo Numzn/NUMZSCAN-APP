@@ -38,9 +38,14 @@ describe("can", () => {
     expect(can(managerOfA, "event.manage", EVENT_B)).toBe(false);
   });
 
-  it("lets staff view and issue credentials, but not manage or see access", () => {
+  it("lets staff view and operate the camp, but not issue credentials, manage checkpoints or see access", () => {
     expect(can(staffOfA, "event.view", EVENT_A)).toBe(true);
-    expect(can(staffOfA, "credential.issue", EVENT_A)).toBe(true);
+    expect(can(staffOfA, "credential.issue", EVENT_A)).toBe(false);
+    expect(can(staffOfA, "operations.scan", EVENT_A)).toBe(true);
+    expect(can(staffOfA, "attendance.view", EVENT_A)).toBe(true);
+    expect(can(staffOfA, "checkpoint.manage", EVENT_A)).toBe(false);
+    expect(can(managerOfA, "checkpoint.manage", EVENT_A)).toBe(true);
+    expect(can(managerOfA, "credential.issue", EVENT_A)).toBe(true);
     expect(can(staffOfA, "event.manage", EVENT_A)).toBe(false);
     expect(can(staffOfA, "event.access.view", EVENT_A)).toBe(false);
     expect(can(staffOfA, "participant.register", EVENT_A)).toBe(false);
